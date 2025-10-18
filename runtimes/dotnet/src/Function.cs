@@ -1,12 +1,17 @@
 using Amazon.Lambda.Core;
+using System.Text.Json;
+
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace LambdaBenchmark;
 
 public class Function
 {
-    public string FunctionHandler(string input, ILambdaContext context)
+    public object FunctionHandler(object input, ILambdaContext context)
     {
-        return "Hello from Lambda!";
+        return new
+        {
+            message = "Hello from Lambda!"
+        };
     }
 }

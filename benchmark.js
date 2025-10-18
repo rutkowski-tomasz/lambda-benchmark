@@ -6,14 +6,9 @@ import { createOrUpdateFunctionCode, updateFunctionConfiguration, invokeFunction
 const execAsync = promisify(exec);
 
 const runtimes = [
-    // 'dotnet',
+    // 'dotnet8',
     'llrt',
     // 'nodejs22',
-];
-
-const buildTypes = [
-    'zip',
-    'image',
 ];
 
 const architectures = [

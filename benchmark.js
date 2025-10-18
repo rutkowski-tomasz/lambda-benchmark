@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { ensureCreated, updateFunctionConfiguration, invokeFunction, deleteFunction } from './lambda-utils.js';
+import { ensureFunctionCreated, updateFunctionConfiguration, invokeFunction, deleteFunction } from './lambda-utils.js';
 
 const execAsync = promisify(exec);
 
@@ -31,7 +31,7 @@ async function executeBenchmark(runtime, architecture, memorySize) {
 
     const functionName = `${runtime}-${architecture}-${memorySize}`;
     
-    await ensureCreated(functionName, runtime, architecture, memorySize);
+    await ensureFunctionCreated(functionName, runtime, architecture, memorySize);
 
     await updateFunctionConfiguration(functionName, memorySize);
     

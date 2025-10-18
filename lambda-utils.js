@@ -4,7 +4,7 @@ import { LambdaClient, UpdateFunctionCodeCommand, CreateFunctionCommand, DeleteF
 const ACCOUNT_ID = "024853653660";
 const lambdaClient = new LambdaClient({ region: "eu-central-1" });
 
-export async function ensureCreated(functionName, runtime, architecture, memorySize) {
+export async function ensureFunctionCreated(functionName, runtime, architecture, memorySize) {
     const zipBuffer = fs.readFileSync(`runtimes/${runtime}/function.zip`);
     
     try {
@@ -24,14 +24,13 @@ export async function ensureCreated(functionName, runtime, architecture, memoryS
         
     } catch (error) {
         if (error.name === 'ResourceConflictException') {
-            console.log(`Function ${functionName} already exists, updating code...`);
             const updateCodeCommand = new UpdateFunctionCodeCommand({
                 FunctionName: functionName,
                 ZipFile: zipBuffer,
             });
             
             await lambdaClient.send(updateCodeCommand);
-            console.log(`Updated function code: ${functionName}`);
+            console.log(`Function ${functionName} already exists, updating code...`);
             
             await waitForFunctionActive(functionName);
         } else {
@@ -88,6 +87,7 @@ export async function invokeFunction(functionName) {
     });
     
     const response = await lambdaClient.send(invokeCommand);
+    
     const responsePayload = JSON.parse(new TextDecoder().decode(response.Payload));
     console.log(`Invoked function ${functionName}:`, responsePayload);
     return responsePayload;

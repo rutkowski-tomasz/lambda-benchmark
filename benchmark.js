@@ -10,15 +10,21 @@ const runtimes = fs.readdirSync('./runtimes', { withFileTypes: true })
     .map(dirent => dirent.name);
 
 const architectures = [
-    'arm64'
+    'arm64',
+    // 'x86_64',
 ];
 
 const memorySizes = [
     128,
-    256,
+    // 256,
 ];
 
 const invokeCount = 3;
+let estimatedCost = 0;
+const gbsCost = {
+    'arm64': 0.0000133334,
+    'x86_64': 0.0000166667,
+};
 
 const benchmarkParams = [];
 for (const architecture of architectures) {
@@ -62,6 +68,8 @@ async function executeBenchmark(runtime, architecture, memorySize) {
     const packageSize = Math.round(fs.statSync(`runtimes/${runtime}/function.zip`).size / 1024, 1);
     const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
     console.log(`${functionName}: packageSize: ${packageSize} KB, avg initDuration: ${averageInitDuration.toFixed(2)}ms`);
-    
+    estimatedCost += results.reduce((acc, result) => acc + result.billedDuration * result.memorySize * gbsCost[architecture], 0);
     await deleteFunction(functionName);
 }
+
+console.log(`Estimated cost: $${estimatedCost.toFixed(2)}`);

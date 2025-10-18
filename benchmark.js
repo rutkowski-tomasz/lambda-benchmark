@@ -11,6 +11,11 @@ const runtimes = [
     // 'nodejs22',
 ];
 
+const buildTypes = [
+    'zip',
+    'image',
+];
+
 const architectures = [
     'arm64',
     // 'x86_64',
@@ -38,10 +43,14 @@ for (const architecture of architectures) {
     }
 }
 
-console.log(`Packing ${runtimes.length} runtimes...`);
-await Promise.all(runtimes.map(runtime =>
-    execAsync(`(cd runtimes/${runtime} && ./pack.sh arm64)`)
-));
+console.log(`Packing ${runtimes.length} runtimes for ${architectures.length} architectures...`);
+await Promise.all(
+    runtimes.flatMap(runtime =>
+        architectures.map(architecture =>
+            execAsync(`(cd runtimes/${runtime} && ./pack.sh ${architecture})`)
+        )
+    )
+);
 
 console.log(`Starting ${benchmarkParams.length} benchmarks in parallel...`);
 await Promise.all(

@@ -1,6 +1,5 @@
-exports.handler = () => {
+module.exports.handler = async () => {
     return {
-        statusCode: 200,
-        message: "Hello from Lambda!",
+        message: "Hello from Lambda!"
     };
 };

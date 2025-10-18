@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { ensureFunctionCreated, updateFunctionConfiguration, invokeFunction, deleteFunction } from './lambda-utils.js';
+import { createOrUpdateFunctionCode, updateFunctionConfiguration, invokeFunction, deleteFunction, queryCloudWatchLogs } from './lambda-utils.js';
 
 const execAsync = promisify(exec);
 
@@ -17,6 +17,7 @@ const memorySizes = [
     128,
 ];
 
+const invokeCount = 2;
 
 for (const architecture of architectures) {
     for (const memorySize of memorySizes) {
@@ -31,11 +32,19 @@ async function executeBenchmark(runtime, architecture, memorySize) {
 
     const functionName = `${runtime}-${architecture}-${memorySize}`;
     
-    await ensureFunctionCreated(functionName, runtime, architecture, memorySize);
+    await createOrUpdateFunctionCode(functionName, runtime, architecture, memorySize);
 
-    await updateFunctionConfiguration(functionName, memorySize);
+    for (let i = 0; i < invokeCount; i++) {
+        await updateFunctionConfiguration(functionName, memorySize);
+
+        console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
+        await invokeFunction(functionName);
+    }
     
-    await invokeFunction(functionName);
+    const results = await queryCloudWatchLogs(functionName);
+
+    const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
+    console.log(`Average init duration: ${averageInitDuration}ms`);
     
-    // await deleteFunction(functionName);
+    await deleteFunction(functionName);
 }

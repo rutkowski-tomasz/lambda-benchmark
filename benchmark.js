@@ -10,14 +10,15 @@ const runtimes = fs.readdirSync('./runtimes', { withFileTypes: true })
     .map(dirent => dirent.name);
 
 const architectures = [
-    'arm64',
+    'arm64'
 ];
 
 const memorySizes = [
     128,
+    256,
 ];
 
-const invokeCount = 2;
+const invokeCount = 3;
 
 const benchmarkParams = [];
 for (const architecture of architectures) {
@@ -28,6 +29,11 @@ for (const architecture of architectures) {
     }
 }
 
+console.log(`Packing ${runtimes.length} runtimes...`);
+await Promise.all(runtimes.map(runtime =>
+    execAsync(`(cd runtimes/${runtime} && ./pack.sh)`)
+));
+
 console.log(`Starting ${benchmarkParams.length} benchmarks in parallel...`);
 await Promise.all(
     benchmarkParams.map(({ runtime, architecture, memorySize }) => 
@@ -36,8 +42,6 @@ await Promise.all(
 );
 
 async function executeBenchmark(runtime, architecture, memorySize) {
-    await execAsync(`(cd runtimes/${runtime} && ./pack.sh)`);
-
     const functionName = `${runtime}-${architecture}-${memorySize}`;
     
     await createOrUpdateFunctionCode(functionName, runtime, architecture, memorySize);
@@ -55,8 +59,9 @@ async function executeBenchmark(runtime, architecture, memorySize) {
         console.error(`[error] Init duration is 0 for function ${functionName}`);
     }
 
+    const packageSize = Math.round(fs.statSync(`runtimes/${runtime}/function.zip`).size / 1024, 1);
     const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
-    console.log(`${functionName}: avg initDuration: ${averageInitDuration.toFixed(2)}ms`);
+    console.log(`${functionName}: packageSize: ${packageSize} KB, avg initDuration: ${averageInitDuration.toFixed(2)}ms`);
     
     await deleteFunction(functionName);
 }

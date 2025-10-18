@@ -19,13 +19,21 @@ const memorySizes = [
 
 const invokeCount = 2;
 
+const benchmarkParams = [];
 for (const architecture of architectures) {
     for (const memorySize of memorySizes) {
         for (const runtime of runtimes) {
-            await executeBenchmark(runtime, architecture, memorySize);
+            benchmarkParams.push({ runtime, architecture, memorySize });
         }
     }
 }
+
+console.log(`Starting ${benchmarkParams.length} benchmarks in parallel...`);
+await Promise.all(
+    benchmarkParams.map(({ runtime, architecture, memorySize }) => 
+        executeBenchmark(runtime, architecture, memorySize)
+    )
+);
 
 async function executeBenchmark(runtime, architecture, memorySize) {
     await execAsync(`(cd runtimes/${runtime} && ./pack.sh)`);
@@ -48,7 +56,7 @@ async function executeBenchmark(runtime, architecture, memorySize) {
     }
 
     const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
-    console.log(`Average init duration: ${averageInitDuration}ms`);
+    console.log(`${functionName}: avg initDuration: ${averageInitDuration.toFixed(2)}ms`);
     
     await deleteFunction(functionName);
 }

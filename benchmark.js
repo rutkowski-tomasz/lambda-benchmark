@@ -19,6 +19,7 @@ const memorySizes = [
     // 256,
 ];
 
+const randomSuffix = Math.random().toString(36).substring(2, 8);
 const invokeCount = 3;
 let estimatedCost = 0;
 const gbsCost = {
@@ -48,7 +49,7 @@ await Promise.all(
 );
 
 async function executeBenchmark(runtime, architecture, memorySize) {
-    const functionName = `${runtime}-${architecture}-${memorySize}`;
+    const functionName = `${runtime}-${architecture}-${memorySize}-${randomSuffix}`;
     
     await createOrUpdateFunctionCode(functionName, runtime, architecture, memorySize);
 
@@ -58,6 +59,9 @@ async function executeBenchmark(runtime, architecture, memorySize) {
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
         await invokeFunction(functionName);
     }
+
+    console.log(`Waiting 120 seconds for logs to be available for ${functionName}...`);
+    await new Promise(resolve => setTimeout(resolve, 120_000));
     
     const results = await queryCloudWatchLogs(functionName);
 
@@ -68,8 +72,21 @@ async function executeBenchmark(runtime, architecture, memorySize) {
     const packageSize = Math.round(fs.statSync(`runtimes/${runtime}/function.zip`).size / 1024, 1);
     const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
     console.log(`${functionName}: packageSize: ${packageSize} KB, avg initDuration: ${averageInitDuration.toFixed(2)}ms`);
-    estimatedCost += results.reduce((acc, result) => acc + result.billedDuration * result.memorySize * gbsCost[architecture], 0);
+    
+    const functionCost = results.reduce((acc, result) => {
+        const billedDuration = result.billedDuration / 1000;
+        const memorySize = result.memorySize / 1024;
+        const costPerGBs = gbsCost[architecture];
+        if (!billedDuration || !memorySize || !costPerGBs) {
+            console.log(`${result.functionName}: billedDuration: ${result.billedDuration}ms, memorySize: ${result.memorySize}MB, architecture: ${architecture}`);
+            return acc;
+        }
+
+        return acc + (billedDuration * memorySize * costPerGBs);
+    }, 0);
+    
+    estimatedCost += functionCost;
     await deleteFunction(functionName);
 }
 
-console.log(`Estimated cost: $${estimatedCost.toFixed(2)}`);
+console.log(`Estimated cost: $${estimatedCost.toFixed(5)}`);

@@ -1,4 +1,4 @@
 {
-    "runtime": "nodejs20.x",
+    "runtime": "provided.al2023",
     "handler": "index.handler"
 }

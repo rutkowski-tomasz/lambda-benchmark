@@ -5,9 +5,11 @@ import { createOrUpdateFunctionCode, updateFunctionConfiguration, invokeFunction
 
 const execAsync = promisify(exec);
 
-const runtimes = fs.readdirSync('./runtimes', { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+const runtimes = [
+    // 'dotnet',
+    'llrt',
+    // 'nodejs22',
+];
 
 const architectures = [
     'arm64',
@@ -38,7 +40,7 @@ for (const architecture of architectures) {
 
 console.log(`Packing ${runtimes.length} runtimes...`);
 await Promise.all(runtimes.map(runtime =>
-    execAsync(`(cd runtimes/${runtime} && ./pack.sh)`)
+    execAsync(`(cd runtimes/${runtime} && ./pack.sh arm64)`)
 ));
 
 console.log(`Starting ${benchmarkParams.length} benchmarks in parallel...`);
@@ -57,7 +59,11 @@ async function executeBenchmark(runtime, architecture, memorySize) {
         await updateFunctionConfiguration(functionName, memorySize);
 
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
-        await invokeFunction(functionName);
+        const response = await invokeFunction(functionName);
+        if (response.message !== "Hello from Lambda!") {
+            console.error(`[error] Invalid response for function ${functionName}`);
+            continue;
+        }
     }
 
     console.log(`Waiting 120 seconds for logs to be available for ${functionName}...`);

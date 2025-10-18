@@ -28,7 +28,7 @@ for (const architecture of architectures) {
 }
 
 async function executeBenchmark(runtime, architecture, memorySize) {
-    await execAsync(`(cd runtimes/${runtime}/src && zip -r ../function.zip .)`);
+    await execAsync(`(cd runtimes/${runtime} && ./pack.sh)`);
 
     const functionName = `${runtime}-${architecture}-${memorySize}`;
     
@@ -38,13 +38,13 @@ async function executeBenchmark(runtime, architecture, memorySize) {
         await updateFunctionConfiguration(functionName, memorySize);
 
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
-        await invokeFunction(functionName);
+        // await invokeFunction(functionName);
     }
     
-    const results = await queryCloudWatchLogs(functionName);
+    // const results = await queryCloudWatchLogs(functionName);
 
-    const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
-    console.log(`Average init duration: ${averageInitDuration}ms`);
+    // const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
+    // console.log(`Average init duration: ${averageInitDuration}ms`);
     
-    await deleteFunction(functionName);
+    // await deleteFunction(functionName);
 }

@@ -9,12 +9,15 @@ const cloudWatchLogsClient = new CloudWatchLogsClient({ region: "eu-central-1" }
 export async function createOrUpdateFunctionCode(functionName, runtime, architecture, memorySize) {
     const zipBuffer = fs.readFileSync(`runtimes/${runtime}/function.zip`);
     
+    const configFile = fs.readFileSync(`runtimes/${runtime}/config.json`, 'utf8');
+    const config = JSON.parse(configFile);
+    
     try {
         const createCommand = new CreateFunctionCommand({
             FunctionName: functionName,
-            Runtime: "nodejs20.x",
+            Runtime: config.runtime,
             Role: `arn:aws:iam::${ACCOUNT_ID}:role/lambda-exec-role`,
-            Handler: "index.handler",
+            Handler: config.handler,
             Code: { ZipFile: zipBuffer },
             Architectures: [architecture],
         });

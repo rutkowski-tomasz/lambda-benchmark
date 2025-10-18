@@ -1,0 +1,4 @@
+{
+    "runtime": "dotnet8",
+    "handler": "LambdaBenchmark::LambdaBenchmark.Function::FunctionHandler"
+}

@@ -142,3 +142,6 @@ vite.config.ts.timestamp-*
 
 .DS_Store
 *.zip
+bin/
+obj/
+publish/

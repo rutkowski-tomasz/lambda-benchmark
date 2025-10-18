@@ -38,13 +38,17 @@ async function executeBenchmark(runtime, architecture, memorySize) {
         await updateFunctionConfiguration(functionName, memorySize);
 
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
-        // await invokeFunction(functionName);
+        await invokeFunction(functionName);
     }
     
-    // const results = await queryCloudWatchLogs(functionName);
+    const results = await queryCloudWatchLogs(functionName);
 
-    // const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
-    // console.log(`Average init duration: ${averageInitDuration}ms`);
+    if (results.some(result => result.initDuration === 0)) {
+        console.error(`[error] Init duration is 0 for function ${functionName}`);
+    }
+
+    const averageInitDuration = results.reduce((acc, result) => acc + result.initDuration, 0) / results.length;
+    console.log(`Average init duration: ${averageInitDuration}ms`);
     
-    // await deleteFunction(functionName);
+    await deleteFunction(functionName);
 }

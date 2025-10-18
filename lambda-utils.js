@@ -23,7 +23,7 @@ export async function createOrUpdateFunctionCode(functionName, runtime, architec
         });
 
         await lambdaClient.send(createCommand);
-        console.log(`Created function: ${functionName} with architecture: ${architecture}`);
+        // console.log(`Created function: ${functionName} with architecture: ${architecture}`);
         
         await waitForFunctionActive(functionName);
         
@@ -35,7 +35,7 @@ export async function createOrUpdateFunctionCode(functionName, runtime, architec
             });
             
             await lambdaClient.send(updateCodeCommand);
-            console.log(`Function ${functionName} already exists, updating code...`);
+            // console.log(`Function ${functionName} already exists, updating code...`);
             
             await waitForFunctionActive(functionName);
         } else {
@@ -84,7 +84,7 @@ export async function updateFunctionConfiguration(functionName, memorySize) {
     });
 
     await lambdaClient.send(updateCommand);
-    console.log(`Updated function configuration: ${functionName} to memory size: ${memorySize}`);
+    // console.log(`Updated function configuration: ${functionName} to memory size: ${memorySize}`);
     
     await waitForFunctionActive(functionName);
 }
@@ -108,7 +108,7 @@ export async function deleteFunction(functionName) {
     });
 
     await lambdaClient.send(deleteCommand);
-    console.log(`Deleted function: ${functionName}`);
+    // console.log(`Deleted function: ${functionName}`);
 }
 
 export async function queryCloudWatchLogs(functionName, hoursBack = 12) {

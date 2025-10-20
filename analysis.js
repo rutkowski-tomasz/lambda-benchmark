@@ -17,23 +17,32 @@ const memorySizes = [
     // 256,
 ];
 
+const packageTypes = [
+    'zip',
+    'image'
+]
+
 const executions = [];
 const packageSizes = JSON.parse(fs.readFileSync('data/packages.json', 'utf8'));
 await analyseAll(runtimes, architectures, memorySizes);
 fs.writeFileSync('data/executions.json', JSON.stringify(executions, null, 2));
 
 async function analyseAll() {
-    console.log(`Starting ${runtimes.length * architectures.length * memorySizes.length} analysis...`);
+    console.log(`Starting ${runtimes.length * packageTypes.length * architectures.length * memorySizes.length} analysis...`);
     await Promise.all(
         runtimes.flatMap(runtime =>
-            architectures.flatMap(architecture =>
-                memorySizes.map(memorySize => analyze(runtime, architecture, memorySize))
+            packageTypes.flatMap(packageType => 
+                architectures.flatMap(architecture =>
+                    memorySizes.map(memorySize =>
+                        analyze(runtime, packageType, architecture, memorySize)
+                    )
+                )
             )
         )
     );
 }
 
-async function analyze(runtime, architecture, memorySize) {
+async function analyze(runtime, packageType, architecture, memorySize) {
     
     const functionName = getFunctionName(runtime, architecture, memorySize);
     const results = await queryCloudWatchLogs(functionName);
@@ -49,7 +58,7 @@ async function analyze(runtime, architecture, memorySize) {
         runtime,
         architecture,
         memorySize,
-        packageSize: packageSizes[`${runtime}-${architecture}`],
+        packageSize: packageSizes[`${runtime}-${packageType}-${architecture}`],
         executions: results,
     });
 }

@@ -1,4 +1,5 @@
 {
     "runtime": "provided.al2023",
-    "handler": "index.handler"
+    "handler": "index.handler",
+    "baseImage": "public.ecr.aws/lambda/provided:al2023"
 }

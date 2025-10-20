@@ -3,11 +3,12 @@ import { LambdaClient, UpdateFunctionCodeCommand, CreateFunctionCommand, DeleteF
 import { CloudWatchLogsClient, StartQueryCommand, GetQueryResultsCommand } from "@aws-sdk/client-cloudwatch-logs";
 
 const ACCOUNT_ID = "024853653660";
+const REGION = "eu-central-1";
 const lambdaClient = new LambdaClient({ region: "eu-central-1" });
 const cloudWatchLogsClient = new CloudWatchLogsClient({ region: "eu-central-1" });
 
-export async function createOrUpdateFunctionCode(runtime, architecture, memorySize) {
-    const functionName = getFunctionName(runtime, architecture, memorySize);
+export async function createOrUpdateFunctionCode(runtime, architecture, memorySize, packageType) {
+    const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const zipBuffer = fs.readFileSync(`runtimes/${runtime}/function_${architecture}.zip`);
     
     const configFile = fs.readFileSync(`runtimes/${runtime}/config.json`, 'utf8');
@@ -16,13 +17,26 @@ export async function createOrUpdateFunctionCode(runtime, architecture, memorySi
     try {
         const createCommand = new CreateFunctionCommand({
             FunctionName: functionName,
-            Runtime: config.runtime,
             Role: `arn:aws:iam::${ACCOUNT_ID}:role/lambda-exec-role`,
-            Handler: config.handler,
-            Code: { ZipFile: zipBuffer },
             Architectures: [architecture],
             MemorySize: memorySize,
         });
+
+        if (packageType == 'zip') {
+            createCommand.input.PackageType = 'Zip';
+            createCommand.input.Runtime = config.runtime;
+            createCommand.input.Handler = config.handler;
+            createCommand.input.Code = {
+                ZipFile: zipBuffer
+            };
+        } 
+
+        if (packageType == 'image') {
+            createCommand.input.PackageType = 'Image';
+            createCommand.input.Code = {
+                ImageUri: `${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/lambda-benchmark:${runtime}-${architecture}`
+            };
+        }
 
         await lambdaClient.send(createCommand);
         // console.log(`Created function: ${functionName} with architecture: ${architecture}`);
@@ -33,8 +47,15 @@ export async function createOrUpdateFunctionCode(runtime, architecture, memorySi
         if (error.name === 'ResourceConflictException') {
             const updateCodeCommand = new UpdateFunctionCodeCommand({
                 FunctionName: functionName,
-                ZipFile: zipBuffer,
             });
+
+            if (packageType == 'zip') {
+                updateCodeCommand.input.ZipFile = zipBuffer;
+            } 
+
+            if (packageType == 'image') {
+                updateCodeCommand.input.ImageUri = `${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/lambda-benchmark:${runtime}-${architecture}`;
+            }
             
             await lambdaClient.send(updateCodeCommand);
             // console.log(`Function ${functionName} already exists, updating code...`);
@@ -81,9 +102,9 @@ export async function waitForFunctionActive(functionName, maxRetries = 5, initia
     throw new Error(`Function ${functionName} did not become active within ${maxRetries * delayMs / 1000} seconds`);
 }
 
-export async function updateFunctionConfiguration(runtime, architecture, memorySize) {
+export async function updateFunctionConfiguration(runtime, packageType, architecture, memorySize) {
 
-    const functionName = getFunctionName(runtime, architecture, memorySize);
+    const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const updateCommand = new UpdateFunctionConfigurationCommand({
         FunctionName: functionName,
         MemorySize: memorySize,
@@ -153,8 +174,8 @@ export function getPackPath(runtime, architecture) {
     return `runtimes/${runtime}/function_${architecture}.zip`;
 }
 
-export function getFunctionName(runtime, architecture, memorySize) {
-    return `${runtime}-${architecture}-${memorySize}`;
+export function getFunctionName(runtime, packageType, architecture, memorySize) {
+    return `${runtime}-${packageType}-${architecture}-${memorySize}`;
 }
 
 export function formatSize(bytes) {

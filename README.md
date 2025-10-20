@@ -1,3 +1,7 @@
+Work in progress
+
+[Live results](https://rutkowski-tomasz.github.io/lambda-benchmark/)
+
 # 📊 lambda-benchmark
 
 Motivation:

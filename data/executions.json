@@ -1,18 +1,5 @@
 [
   {
-    "runtime": "dotnet8",
-    "architecture": "x86_64",
-    "memorySize": 128,
-    "executions": [
-      {
-        "initDuration": 0,
-        "duration": 20.4,
-        "billedDuration": 21,
-        "memoryUsed": 16
-      }
-    ]
-  },
-  {
     "runtime": "nodejs22",
     "architecture": "x86_64",
     "memorySize": 128,
@@ -22,6 +9,25 @@
         "duration": 7.89,
         "billedDuration": 161,
         "memoryUsed": 66
+      }
+    ]
+  },
+  {
+    "runtime": "nodejs22",
+    "architecture": "arm64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 15.18,
+        "billedDuration": 16,
+        "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
       }
     ]
   },
@@ -48,19 +54,12 @@
         "duration": 13.62,
         "billedDuration": 14,
         "memoryUsed": 16
-      }
-    ]
-  },
-  {
-    "runtime": "dotnet8",
-    "architecture": "arm64",
-    "memorySize": 128,
-    "executions": [
+      },
       {
         "initDuration": 0,
-        "duration": 17.22,
-        "billedDuration": 18,
-        "memoryUsed": 15
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
       }
     ]
   },
@@ -74,19 +73,98 @@
         "duration": 15.29,
         "billedDuration": 16,
         "memoryUsed": 16
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
       }
     ]
   },
   {
-    "runtime": "nodejs22",
+    "runtime": "dotnet8",
+    "architecture": "x86_64",
+    "memorySize": 128,
+    "executions": []
+  },
+  {
+    "runtime": "dotnet8",
     "architecture": "arm64",
     "memorySize": 128,
+    "packageSize": 373844428,
     "executions": [
       {
         "initDuration": 0,
-        "duration": 15.18,
+        "duration": 20.16,
+        "billedDuration": 21,
+        "memoryUsed": 18
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
+        "duration": 22.35,
+        "billedDuration": 23,
+        "memoryUsed": 19
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
+        "duration": 14.88,
+        "billedDuration": 15,
+        "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
+        "duration": 15.9,
         "billedDuration": 16,
         "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
+        "duration": 17.22,
+        "billedDuration": 18,
+        "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
       }
     ]
   },
@@ -94,7 +172,6 @@
     "runtime": "llrt",
     "architecture": "arm64",
     "memorySize": 128,
-    "packageSize": 132846768,
     "executions": [
       {
         "initDuration": 0,
@@ -104,9 +181,21 @@
       },
       {
         "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
         "duration": 13.69,
         "billedDuration": 14,
         "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
       },
       {
         "initDuration": 0,
@@ -116,10 +205,91 @@
       },
       {
         "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      },
+      {
+        "initDuration": 0,
         "duration": 13.37,
         "billedDuration": 14,
         "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
       }
     ]
+  },
+  {
+    "runtime": "dotnet8",
+    "architecture": "x86_64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 2015.4,
+        "billedDuration": 2016,
+        "memoryUsed": 16
+      },
+      {
+        "initDuration": 0,
+        "duration": null,
+        "billedDuration": null,
+        "memoryUsed": null
+      }
+    ]
+  },
+  {
+    "runtime": "dotnet8",
+    "architecture": "arm64",
+    "memorySize": 128,
+    "packageSize": 39348,
+    "executions": [
+      {
+        "initDuration": 326.2,
+        "duration": 758.07,
+        "billedDuration": 1085,
+        "memoryUsed": 70
+      },
+      {
+        "initDuration": 304.21,
+        "duration": 853.81,
+        "billedDuration": 1159,
+        "memoryUsed": 70
+      },
+      {
+        "initDuration": 329.2,
+        "duration": 779.09,
+        "billedDuration": 1109,
+        "memoryUsed": 70
+      },
+      {
+        "initDuration": 323.1,
+        "duration": 748.37,
+        "billedDuration": 1072,
+        "memoryUsed": 70
+      }
+    ]
+  },
+  {
+    "runtime": "llrt",
+    "architecture": "arm64",
+    "memorySize": 128,
+    "executions": []
+  },
+  {
+    "runtime": "llrt",
+    "architecture": "x86_64",
+    "memorySize": 128,
+    "executions": []
   }
 ]

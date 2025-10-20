@@ -4,28 +4,19 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-const runtimes = [
-    'dotnet8',
-    // 'llrt',
-    // 'nodejs22',
-];
+export async function packAll(runtimes, architectures) {
 
-const architectures = [
-    'arm64',
-    'x86_64',
-];
-
-console.log(`Packing ${runtimes.length * architectures.length} functions...`);
-
-await Promise.all(
-    runtimes.map(runtime =>
-        architectures.map(architecture =>
-            pack(runtime, architecture)
+    console.log(`Packing ${runtimes.length * architectures.length} functions...`);
+    await Promise.all(
+        runtimes.map(runtime =>
+            architectures.map(architecture =>
+                pack(runtime, architecture)
+            )
         )
-    )
-);
+    );
+}
 
-async function pack(runtime, architecture) {
+export async function pack(runtime, architecture) {
 
     const packPath = `runtimes/${runtime}/function_${architecture}.zip`;
     if (fs.existsSync(packPath)) {

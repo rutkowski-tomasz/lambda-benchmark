@@ -6,8 +6,9 @@ const ACCOUNT_ID = "024853653660";
 const lambdaClient = new LambdaClient({ region: "eu-central-1" });
 const cloudWatchLogsClient = new CloudWatchLogsClient({ region: "eu-central-1" });
 
-export async function createOrUpdateFunctionCode(functionName, runtime, architecture, memorySize) {
-    const zipBuffer = fs.readFileSync(`runtimes/${runtime}/function.zip`);
+export async function createOrUpdateFunctionCode(runtime, architecture, memorySize) {
+    const functionName = getFunctionName(runtime, architecture, memorySize);
+    const zipBuffer = fs.readFileSync(`runtimes/${runtime}/function_${architecture}.zip`);
     
     const configFile = fs.readFileSync(`runtimes/${runtime}/config.json`, 'utf8');
     const config = JSON.parse(configFile);
@@ -20,6 +21,7 @@ export async function createOrUpdateFunctionCode(functionName, runtime, architec
             Handler: config.handler,
             Code: { ZipFile: zipBuffer },
             Architectures: [architecture],
+            MemorySize: memorySize,
         });
 
         await lambdaClient.send(createCommand);
@@ -42,6 +44,8 @@ export async function createOrUpdateFunctionCode(functionName, runtime, architec
             throw error;
         }
     }
+
+    console.log(`[success] Deployed ${functionName}`);
 }
 
 export async function waitForFunctionActive(functionName, maxRetries = 5, initialDelayMs = 2000, delayMs = 2000) {
@@ -145,4 +149,30 @@ export async function queryCloudWatchLogs(functionName, hoursBack = 12) {
     });
     
     return tableData;
+}
+
+export function getPackPath(runtime, architecture) {
+    return `runtimes/${runtime}/function_${architecture}.zip`;
+}
+
+export function getFunctionName(runtime, architecture, memorySize) {
+    return `${runtime}-${architecture}-${memorySize}`;
+}
+
+export function formatSize(bytes) {
+    if (bytes === 0) {
+        return '0 bytes';
+    }
+    
+    const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    const k = 1024;
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const value = bytes / Math.pow(k, i);
+
+    if (value >= 10) {
+        return value.toFixed(0) + ' ' + units[i];
+    }
+
+    return value.toFixed(1) + ' ' + units[i];
 }

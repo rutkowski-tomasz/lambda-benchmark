@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { getPackPath, formatSize } from './lambda-utils.js';
 
 const execAsync = promisify(exec);
 
@@ -8,17 +9,15 @@ export async function packAll(runtimes, architectures) {
 
     console.log(`Packing ${runtimes.length * architectures.length} functions...`);
     await Promise.all(
-        runtimes.map(runtime =>
-            architectures.map(architecture =>
-                pack(runtime, architecture)
-            )
+        runtimes.flatMap(runtime =>
+            architectures.map(architecture => pack(runtime, architecture))
         )
     );
 }
 
 export async function pack(runtime, architecture) {
 
-    const packPath = `runtimes/${runtime}/function_${architecture}.zip`;
+    const packPath = getPackPath(runtime, architecture);
     if (fs.existsSync(packPath)) {
         fs.unlinkSync(packPath);
     }
@@ -43,6 +42,6 @@ export async function pack(runtime, architecture) {
         console.error(`[error] copy command failed: ${copyCommand}`);
     }
 
-    const size = Math.round(fs.statSync(packPath).size / 1024, 1);
-    console.log(`[success] Packed ${runtime} for architecture ${architecture} (${packPath}, ${size}kb)`);
+    const size = formatSize(fs.statSync(packPath).size);
+    console.log(`[success] Packed ${runtime} - ${architecture} (${packPath}, ${size})`);
 }

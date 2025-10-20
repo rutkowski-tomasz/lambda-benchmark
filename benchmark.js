@@ -55,9 +55,7 @@ await Promise.all(
 );
 
 async function executeBenchmark(runtime, architecture, memorySize) {
-    const functionName = `${runtime}-${architecture}-${memorySize}-${randomSuffix}`;
-    
-    await createOrUpdateFunctionCode(functionName, runtime, architecture, memorySize);
+    await createOrUpdateFunctionCode(runtime, architecture, memorySize);
 
     for (let i = 0; i < invokeCount; i++) {
         await updateFunctionConfiguration(functionName, memorySize);

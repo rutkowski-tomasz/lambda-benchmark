@@ -1,13 +1,14 @@
-# lambda-benchmark
+# 📊 lambda-benchmark
 
-## Setup
+Motivation:
+Up to date benchmark results
+Analyzing cold start and execution times
+Scenario: deserialize JSON array, get min/max/avg of positive numbers, serialize to JSON
+Useful graphs to compare results
 
-```sh
-./init.sh
-```
+## 🚀 run.js
 
-## run.js
-
+To setup prerequisites `./init.sh`
 1. Create deployable ZIP package in Docker (packageType='zip')
   1. (if aplicable) Build/publish deployable files (applicable for compiled languages)
   1. Package deployable files into ZIP
@@ -18,11 +19,15 @@
   1. Update configuration to force cold start
   1. Invoke
 
-## analysis.js
-Query CloudWatch REPORT logs for each function 
- 
-# Roadmap
+## 🔎 analysis.js
+Query CloudWatch REPORT logs for each function to extract cold start and execution times data.
 
+## 📢 publish.js
+Get results and publish to github pages.
+ 
+# 🛣️ Roadmap
+
+1. Image packageType returns error
 1. Estimate cost for running benchmark 'arm64': 0.0000133334, 'x86_64': 0.0000166667,
 1. Implement benchmarked logic deserialize, get min/max/avg of positive numbers, serialize to JSON
   - dotnet8

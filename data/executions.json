@@ -1,0 +1,125 @@
+[
+  {
+    "runtime": "dotnet8",
+    "architecture": "x86_64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 20.4,
+        "billedDuration": 21,
+        "memoryUsed": 16
+      }
+    ]
+  },
+  {
+    "runtime": "nodejs22",
+    "architecture": "x86_64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 152.76,
+        "duration": 7.89,
+        "billedDuration": 161,
+        "memoryUsed": 66
+      }
+    ]
+  },
+  {
+    "runtime": "nodejs22",
+    "architecture": "arm64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 143.34,
+        "duration": 8.93,
+        "billedDuration": 153,
+        "memoryUsed": 65
+      }
+    ]
+  },
+  {
+    "runtime": "llrt",
+    "architecture": "x86_64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 13.62,
+        "billedDuration": 14,
+        "memoryUsed": 16
+      }
+    ]
+  },
+  {
+    "runtime": "dotnet8",
+    "architecture": "arm64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 17.22,
+        "billedDuration": 18,
+        "memoryUsed": 15
+      }
+    ]
+  },
+  {
+    "runtime": "nodejs22",
+    "architecture": "x86_64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 15.29,
+        "billedDuration": 16,
+        "memoryUsed": 16
+      }
+    ]
+  },
+  {
+    "runtime": "nodejs22",
+    "architecture": "arm64",
+    "memorySize": 128,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 15.18,
+        "billedDuration": 16,
+        "memoryUsed": 15
+      }
+    ]
+  },
+  {
+    "runtime": "llrt",
+    "architecture": "arm64",
+    "memorySize": 128,
+    "packageSize": 132846768,
+    "executions": [
+      {
+        "initDuration": 0,
+        "duration": 12.48,
+        "billedDuration": 13,
+        "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": 13.69,
+        "billedDuration": 14,
+        "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": 12.6,
+        "billedDuration": 13,
+        "memoryUsed": 15
+      },
+      {
+        "initDuration": 0,
+        "duration": 13.37,
+        "billedDuration": 14,
+        "memoryUsed": 15
+      }
+    ]
+  }
+]

@@ -3,13 +3,13 @@ import { queryCloudWatchLogs, getFunctionName } from './lambda-utils.js';
 
 const runtimes = [
     'dotnet8',
-    'llrt',
-    'nodejs22',
+    // 'llrt',
+    // 'nodejs22',
 ];
 
 const architectures = [
     'arm64',
-    'x86_64',
+    // 'x86_64',
 ];
 
 const memorySizes = [
@@ -44,7 +44,7 @@ async function analyseAll() {
 
 async function analyze(runtime, packageType, architecture, memorySize) {
     
-    const functionName = getFunctionName(runtime, architecture, memorySize);
+    const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const results = await queryCloudWatchLogs(functionName);
 
     const avgInitDuration = (results.reduce((acc, result) => acc + result.initDuration, 0) / results.length).toFixed(2);

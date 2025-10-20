@@ -14,8 +14,8 @@ import {
 const execAsync = promisify(exec);
 
 const runtimes = [
-    // 'dotnet8',
-    'llrt',
+    'dotnet8',
+    // 'llrt',
     // 'nodejs22',
 ];
 
@@ -29,7 +29,7 @@ const memorySizes = [
 ];
 
 const packageTypes = [
-    // 'zip',
+    'zip',
     'image'
 ];
 

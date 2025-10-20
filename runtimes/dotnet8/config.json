@@ -1,4 +1,5 @@
 {
     "runtime": "dotnet8",
-    "handler": "LambdaBenchmark::LambdaBenchmark.Function::FunctionHandler"
+    "handler": "LambdaBenchmark::LambdaBenchmark.Function::FunctionHandler",
+    "baseImage": "public.ecr.aws/lambda/dotnet:8"
 }

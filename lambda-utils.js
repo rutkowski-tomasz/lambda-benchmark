@@ -81,7 +81,9 @@ export async function waitForFunctionActive(functionName, maxRetries = 5, initia
     throw new Error(`Function ${functionName} did not become active within ${maxRetries * delayMs / 1000} seconds`);
 }
 
-export async function updateFunctionConfiguration(functionName, memorySize) {
+export async function updateFunctionConfiguration(runtime, architecture, memorySize) {
+
+    const functionName = getFunctionName(runtime, architecture, memorySize);
     const updateCommand = new UpdateFunctionConfigurationCommand({
         FunctionName: functionName,
         MemorySize: memorySize,
@@ -135,16 +137,12 @@ export async function queryCloudWatchLogs(functionName, hoursBack = 12) {
         const initDuration = row.find(field => field.field === '@initDuration')?.value || '0';
         const billedDuration = row.find(field => field.field === '@billedDuration')?.value;
         const maxMemoryUsed = row.find(field => field.field === '@maxMemoryUsed')?.value;
-        const memorySize = row.find(field => field.field === '@memorySize')?.value;
-        const functionName = row.find(field => field.field === '@entity.Attributes.Lambda.Function')?.value;
 
         return {
-            functionName: functionName,
             initDuration: parseFloat(initDuration),
             duration: parseFloat(duration),
             billedDuration: parseFloat(billedDuration),
-            memoryUsed: Math.round(maxMemoryUsed / 1_000_000),
-            memorySize: Math.round(memorySize / 1_000_000)
+            memoryUsed: parseInt(maxMemoryUsed) / 1_000_000,
         };
     });
     

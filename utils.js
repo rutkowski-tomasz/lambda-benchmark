@@ -138,7 +138,7 @@ export async function deleteFunction(functionName) {
     // console.log(`Deleted function: ${functionName}`);
 }
 
-export async function queryCloudWatchLogs(functionName, hoursBack = 2) {
+export async function queryCloudWatchLogs(functionName, hoursBack = 6) {
     const startCommand = new StartQueryCommand({
         logGroupName: `/aws/lambda/${functionName}`,
         startTime: Math.floor((Date.now() - hoursBack * 60 * 60 * 1000) / 1000),

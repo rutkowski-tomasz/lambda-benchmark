@@ -1,10 +1,11 @@
 import fs from 'fs';
-import { queryCloudWatchLogs, getFunctionName } from './lambda-utils.js';
+import { queryCloudWatchLogs, getFunctionName } from './utils.js';
 
 const runtimes = [
-    'dotnet8',
-    'llrt',
-    'nodejs22',
+    // 'dotnet8',
+    'dotnet8_aot_al2023',
+    // 'llrt',
+    // 'nodejs22',
 ];
 
 const architectures = [
@@ -13,12 +14,13 @@ const architectures = [
 ];
 
 const memorySizes = [
-    128,
-    // 256,
+    // 128,
+    256,
+    // 512,
 ];
 
 const packageTypes = [
-    'zip',
+    // 'zip',
     'image'
 ];
 
@@ -54,6 +56,11 @@ async function analyze(runtime, packageType, architecture, memorySize) {
     
     const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const results = await queryCloudWatchLogs(functionName);
+    const coldStartExecutions = results.filter(result => result.initDuration > 0);
+
+    if (coldStartExecutions.length === 0) {
+        console.warn(`[warn] ${functionName} got no executions`);
+    }
 
     const totalBilledDuration = results.reduce((acc, result) => acc + result.billedDuration || 0, 0);
     totalPrice += (memorySize / 1024) * (totalBilledDuration / 1000) * (pricePerGbs[architecture]);
@@ -64,6 +71,6 @@ async function analyze(runtime, packageType, architecture, memorySize) {
         architecture,
         memorySize,
         packageSize: packageSizes[`${runtime}-${packageType}-${architecture}`],
-        executions: results.filter(result => result.initDuration > 0),
+        executions: coldStartExecutions,
     });
 }

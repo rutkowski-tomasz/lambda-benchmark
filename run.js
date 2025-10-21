@@ -9,14 +9,15 @@ import {
     updateFunctionConfiguration,
     invokeFunction,
     deleteFunction
-} from './lambda-utils.js';
+} from './utils.js';
 
 const execAsync = promisify(exec);
 
 const runtimes = [
-    'dotnet8',
-    'llrt',
-    'nodejs22',
+    // 'dotnet8',
+    'dotnet8_aot_al2023',
+    // 'llrt',
+    // 'nodejs22',
 ];
 
 const architectures = [
@@ -25,11 +26,12 @@ const architectures = [
 ];
 
 const memorySizes = [
-    128
+    // 128,
+    256
 ];
 
 const packageTypes = [
-    'zip',
+    // 'zip',
     'image'
 ];
 
@@ -140,7 +142,7 @@ export async function executeAll(runtimes, packageTypes, architectures, memorySi
     );
 }
 
-export async function execute(runtime, architecture, memorySize, packageType, invokeCount = 2) {
+export async function execute(runtime, architecture, memorySize, packageType, invokeCount = 5) {
     const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     await createOrUpdateFunctionCode(runtime, architecture, memorySize, packageType);
 

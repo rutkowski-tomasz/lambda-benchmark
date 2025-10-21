@@ -1,229 +1,31 @@
 [
   {
-    "runtime": "dotnet8",
-    "packageType": "zip",
-    "architecture": "x86_64",
-    "memorySize": 128,
-    "packageSize": 39343,
-    "executions": [
-      {
-        "initDuration": 286.73,
-        "duration": 632.29,
-        "billedDuration": 920,
-        "memoryUsed": 68
-      },
-      {
-        "initDuration": 240.45,
-        "duration": 633.52,
-        "billedDuration": 874,
-        "memoryUsed": 68
-      }
-    ]
-  },
-  {
-    "runtime": "nodejs22",
-    "packageType": "image",
-    "architecture": "x86_64",
-    "memorySize": 128,
-    "packageSize": 412291983,
-    "executions": [
-      {
-        "initDuration": 346.91,
-        "duration": 17.11,
-        "billedDuration": 365,
-        "memoryUsed": 73
-      }
-    ]
-  },
-  {
-    "runtime": "nodejs22",
-    "packageType": "zip",
-    "architecture": "arm64",
-    "memorySize": 128,
-    "packageSize": 254,
-    "executions": [
-      {
-        "initDuration": 145.43,
-        "duration": 22.62,
-        "billedDuration": 169,
-        "memoryUsed": 65
-      },
-      {
-        "initDuration": 142.85,
-        "duration": 11.12,
-        "billedDuration": 154,
-        "memoryUsed": 65
-      }
-    ]
-  },
-  {
-    "runtime": "dotnet8",
+    "runtime": "dotnet8_aot_al2023",
     "packageType": "image",
     "architecture": "arm64",
-    "memorySize": 128,
-    "packageSize": 373844529,
+    "memorySize": 256,
+    "packageSize": 157017333,
     "executions": [
       {
-        "initDuration": 465.15,
-        "duration": 810.28,
-        "billedDuration": 1276,
-        "memoryUsed": 70
+        "initDuration": 141.74,
+        "duration": 2.77,
+        "billedDuration": 145,
+        "memoryUsed": 23
       }
     ]
   },
   {
-    "runtime": "llrt",
-    "packageType": "image",
-    "architecture": "arm64",
-    "memorySize": 128,
-    "packageSize": 137620968,
-    "executions": [
-      {
-        "initDuration": 94.41,
-        "duration": 1.69,
-        "billedDuration": 97,
-        "memoryUsed": 29
-      },
-      {
-        "initDuration": 94.12,
-        "duration": 1.79,
-        "billedDuration": 96,
-        "memoryUsed": 29
-      },
-      {
-        "initDuration": 1116.44,
-        "duration": 6.66,
-        "billedDuration": 1124,
-        "memoryUsed": 29
-      }
-    ]
-  },
-  {
-    "runtime": "nodejs22",
-    "packageType": "image",
-    "architecture": "arm64",
-    "memorySize": 128,
-    "packageSize": 434844237,
-    "executions": [
-      {
-        "initDuration": 454.95,
-        "duration": 33.63,
-        "billedDuration": 489,
-        "memoryUsed": 71
-      }
-    ]
-  },
-  {
-    "runtime": "llrt",
+    "runtime": "dotnet8_aot_al2023",
     "packageType": "image",
     "architecture": "x86_64",
-    "memorySize": 128,
-    "packageSize": 117601657,
+    "memorySize": 256,
+    "packageSize": 135859862,
     "executions": [
       {
-        "initDuration": 1401.08,
-        "duration": 1.53,
-        "billedDuration": 1403,
-        "memoryUsed": 33
-      }
-    ]
-  },
-  {
-    "runtime": "nodejs22",
-    "packageType": "zip",
-    "architecture": "x86_64",
-    "memorySize": 128,
-    "packageSize": 254,
-    "executions": [
-      {
-        "initDuration": 135.14,
-        "duration": 11.37,
-        "billedDuration": 147,
-        "memoryUsed": 67
-      },
-      {
-        "initDuration": 137.93,
-        "duration": 11.78,
-        "billedDuration": 150,
-        "memoryUsed": 66
-      }
-    ]
-  },
-  {
-    "runtime": "dotnet8",
-    "packageType": "image",
-    "architecture": "x86_64",
-    "memorySize": 128,
-    "packageSize": 344295944,
-    "executions": [
-      {
-        "initDuration": 801.84,
-        "duration": 711.99,
-        "billedDuration": 1514,
-        "memoryUsed": 69
-      }
-    ]
-  },
-  {
-    "runtime": "llrt",
-    "packageType": "zip",
-    "architecture": "arm64",
-    "memorySize": 128,
-    "packageSize": 4689646,
-    "executions": [
-      {
-        "initDuration": 56.75,
-        "duration": 7.24,
-        "billedDuration": 64,
-        "memoryUsed": 26
-      },
-      {
-        "initDuration": 52.69,
-        "duration": 11.03,
-        "billedDuration": 64,
-        "memoryUsed": 26
-      }
-    ]
-  },
-  {
-    "runtime": "llrt",
-    "packageType": "zip",
-    "architecture": "x86_64",
-    "memorySize": 128,
-    "packageSize": 4994848,
-    "executions": [
-      {
-        "initDuration": 59.5,
-        "duration": 17.02,
-        "billedDuration": 77,
-        "memoryUsed": 28
-      },
-      {
-        "initDuration": 56.37,
-        "duration": 1.5,
-        "billedDuration": 58,
-        "memoryUsed": 28
-      }
-    ]
-  },
-  {
-    "runtime": "dotnet8",
-    "packageType": "zip",
-    "architecture": "arm64",
-    "memorySize": 128,
-    "packageSize": 39348,
-    "executions": [
-      {
-        "initDuration": 318.91,
-        "duration": 710.43,
-        "billedDuration": 1030,
-        "memoryUsed": 70
-      },
-      {
-        "initDuration": 305.55,
-        "duration": 758.84,
-        "billedDuration": 1065,
-        "memoryUsed": 70
+        "initDuration": 116.8,
+        "duration": 2.26,
+        "billedDuration": 120,
+        "memoryUsed": 25
       }
     ]
   }

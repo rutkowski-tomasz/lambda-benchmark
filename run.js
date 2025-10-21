@@ -156,5 +156,5 @@ export async function execute(runtime, architecture, memorySize, packageType, in
         }
     }
 
-    // await deleteFunction(functionName);
+    await deleteFunction(functionName);
 }

@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'export',
-  basePath: '/lambda-benchmark',
+  basePath: process.env.NODE_ENV === 'development' ? '' : '/lambda-benchmark',
   images: {
     unoptimized: true,
   },

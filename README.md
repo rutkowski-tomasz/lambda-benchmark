@@ -28,7 +28,6 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
  
 # 🛣️ Roadmap
 
-1. Image packageType returns error
 1. Implement benchmarked logic deserialize, get min/max/avg of positive numbers, serialize to JSON
     1. dotnet8
     1. llrt

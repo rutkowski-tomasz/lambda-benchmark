@@ -22,9 +22,16 @@ export function Chart({ executions }: { executions: any }) {
         (acc: number, curr: any) => acc + curr.duration,
         0
       ) / execution.executions.length;
+
+    const avgInitDuration =
+      execution.executions.reduce(
+        (acc: number, curr: any) => acc + curr.initDuration,
+        0
+      ) / execution.executions.length;
     chartData.push({
       configuration: `${execution.runtime} ${execution.architecture} ${execution.memorySize}MB`,
       duration: avgDuration,
+      initDuration: avgInitDuration,
     });
     console.log(
       `${execution.runtime} ${execution.architecture} ${execution.memorySize}MB: ${avgDuration}`
@@ -35,6 +42,10 @@ export function Chart({ executions }: { executions: any }) {
     duration: {
       label: "Avg Duration (ms)",
       color: "hsl(var(--chart-1))",
+    },
+    initDuration: {
+      label: "Avg Init Duration (ms)",
+      color: "hsl(var(--chart-2))",
     },
   } satisfies ChartConfig;
 
@@ -71,8 +82,14 @@ export function Chart({ executions }: { executions: any }) {
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar
               dataKey="duration"
-              fill="var(--color-duration)"
+              fill="var(--chart-1)"
+              stackId="totalDuration"
+            />
+            <Bar
+              dataKey="initDuration"
+              fill="var(--chart-2)"
               radius={[8, 8, 0, 0]}
+              stackId="totalDuration"
             />
           </BarChart>
         </ChartContainer>

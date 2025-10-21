@@ -32,7 +32,8 @@ const executions = [];
 const packageSizes = JSON.parse(fs.readFileSync('data/packages.json', 'utf8'));
 await analyseAll(runtimes, architectures, memorySizes);
 fs.writeFileSync('data/executions.json', JSON.stringify(executions, null, 2));
-console.log(`[success] Benchmark estimated cost: $${totalPrice.toFixed(5)}`);
+const totalExecutions = executions.reduce((acc, execution) => acc + execution.executions.length, 0);
+console.log(`[success] Benchmarked ${totalExecutions} executions, estimated cost: $${totalPrice.toFixed(5)}`);
 
 async function analyseAll() {
     console.log(`Starting ${runtimes.length * packageTypes.length * architectures.length * memorySizes.length} analysis...`);
@@ -54,21 +55,15 @@ async function analyze(runtime, packageType, architecture, memorySize) {
     const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const results = await queryCloudWatchLogs(functionName);
 
-    const avgInitDuration = (results.reduce((acc, result) => acc + result.initDuration, 0) / results.length).toFixed(2);
-    console.log(`[success] ${functionName} with ${results.length} executions, avg initDuration: ${avgInitDuration}ms`);
-
-    if (results.some(result => result.initDuration === 0)) {
-        console.error(`[error] Init duration is 0 for function ${functionName}`);
-    }
-
     const totalBilledDuration = results.reduce((acc, result) => acc + result.billedDuration || 0, 0);
     totalPrice += (memorySize / 1024) * (totalBilledDuration / 1000) * (pricePerGbs[architecture]);
 
     executions.push({
         runtime,
+        packageType,
         architecture,
         memorySize,
         packageSize: packageSizes[`${runtime}-${packageType}-${architecture}`],
-        executions: results,
+        executions: results.filter(result => result.initDuration > 0),
     });
 }

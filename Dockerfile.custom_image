@@ -1,8 +1,21 @@
-ARG BASE_IMAGE
+ARG BASE_IMAGE=alpine:latest
 FROM ${BASE_IMAGE}
 
+ARG HANDLER
 ARG ARCHITECTURE
+
 COPY ./function_${ARCHITECTURE} ${LAMBDA_TASK_ROOT}
 
-ARG HANDLER
-CMD [${HANDLER}]
+RUN env
+
+RUN if [ -f ${LAMBDA_TASK_ROOT}/bootstrap ]; then \
+    mkdir -p ${LAMBDA_RUNTIME_DIR} && \
+    mv ${LAMBDA_TASK_ROOT}/bootstrap ${LAMBDA_RUNTIME_DIR}/bootstrap && \
+    chmod +x ${LAMBDA_RUNTIME_DIR}/bootstrap; \
+    fi
+
+RUN printf '#!/bin/sh\nexec /lambda-entrypoint.sh %s "$@"\n' "${HANDLER}" > /start.sh && \
+    chmod +x /start.sh
+
+ENTRYPOINT ["/start.sh"]
+CMD []

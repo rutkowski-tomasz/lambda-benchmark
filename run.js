@@ -15,13 +15,13 @@ const execAsync = promisify(exec);
 
 const runtimes = [
     'dotnet8',
-    // 'llrt',
-    // 'nodejs22',
+    'llrt',
+    'nodejs22',
 ];
 
 const architectures = [
     'arm64',
-    // 'x86_64',
+    'x86_64',
 ];
 
 const memorySizes = [
@@ -109,7 +109,6 @@ export async function createCustomImage(runtime, architecture) {
 
     const tag = `${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/lambda-benchmark:${runtime}-${architecture}`;
     const buildCommand = `docker build --platform ${platform} runtimes/${runtime} -f Dockerfile.custom_image --build-arg BASE_IMAGE=${config.baseImage} --build-arg HANDLER=${config.handler} --build-arg ARCHITECTURE=${architecture} -t ${tag}`;
-
     try {
         await execAsync(buildCommand);
     } catch (error) {

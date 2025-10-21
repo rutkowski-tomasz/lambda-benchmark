@@ -1,4 +1,14 @@
 {
   "dotnet8-zip-arm64": 39348,
-  "dotnet8-image-arm64": 373844428
+  "dotnet8-zip-x86_64": 39343,
+  "nodejs22-zip-arm64": 254,
+  "llrt-zip-arm64": 4689646,
+  "nodejs22-zip-x86_64": 254,
+  "llrt-zip-x86_64": 4994848,
+  "llrt-image-arm64": 137620968,
+  "nodejs22-image-arm64": 434844237,
+  "dotnet8-image-arm64": 373844529,
+  "llrt-image-x86_64": 117601657,
+  "nodejs22-image-x86_64": 412291983,
+  "dotnet8-image-x86_64": 344295944
 }

@@ -1,13 +1,14 @@
 import fs from 'fs';
 import { LambdaClient, UpdateFunctionCodeCommand, CreateFunctionCommand, DeleteFunctionCommand, InvokeCommand, GetFunctionCommand, UpdateFunctionConfigurationCommand } from "@aws-sdk/client-lambda";
 import { CloudWatchLogsClient, StartQueryCommand, GetQueryResultsCommand } from "@aws-sdk/client-cloudwatch-logs";
+import { type Architecture, type PackageType, type MemorySize, type ExecutionData } from './types.js';
 
 const ACCOUNT_ID = "024853653660";
 const REGION = "eu-central-1";
 const lambdaClient = new LambdaClient({ region: "eu-central-1" });
 const cloudWatchLogsClient = new CloudWatchLogsClient({ region: "eu-central-1" });
 
-export async function createOrUpdateFunctionCode(runtime, architecture, memorySize, packageType) {
+export async function createOrUpdateFunctionCode(runtime: string, architecture: Architecture, memorySize: MemorySize, packageType: PackageType): Promise<void> {
     const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const zipBuffer = fs.readFileSync(`runtimes/${runtime}/function_${architecture}.zip`);
     
@@ -15,35 +16,37 @@ export async function createOrUpdateFunctionCode(runtime, architecture, memorySi
     const config = JSON.parse(configFile);
     
     try {
-        const createCommand = new CreateFunctionCommand({
+        const createCommandInput: any = {
             FunctionName: functionName,
             Role: `arn:aws:iam::${ACCOUNT_ID}:role/lambda-exec-role`,
             Architectures: [architecture],
             MemorySize: memorySize,
-        });
+        };
 
         if (packageType == 'zip') {
-            createCommand.input.PackageType = 'Zip';
-            createCommand.input.Runtime = config.runtime;
-            createCommand.input.Handler = config.handler;
-            createCommand.input.Code = {
+            createCommandInput.PackageType = 'Zip';
+            createCommandInput.Runtime = config.runtime;
+            createCommandInput.Handler = config.handler;
+            createCommandInput.Code = {
                 ZipFile: zipBuffer
             };
         } 
 
         if (packageType == 'image') {
-            createCommand.input.PackageType = 'Image';
-            createCommand.input.Code = {
+            createCommandInput.PackageType = 'Image';
+            createCommandInput.Code = {
                 ImageUri: `${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/lambda-benchmark:${runtime}-${architecture}`
             };
         }
+
+        const createCommand = new CreateFunctionCommand(createCommandInput);
 
         await lambdaClient.send(createCommand);
         // console.log(`Created function: ${functionName} with architecture: ${architecture}`);
         
         await waitForFunctionActive(functionName);
         
-    } catch (error) {
+    } catch (error: any) {
         if (error.name === 'ResourceConflictException') {
             const updateCodeCommand = new UpdateFunctionCodeCommand({
                 FunctionName: functionName,
@@ -69,7 +72,7 @@ export async function createOrUpdateFunctionCode(runtime, architecture, memorySi
     console.log(`[success] Deployed ${functionName}`);
 }
 
-export async function waitForFunctionActive(functionName, maxRetries = 5, initialDelayMs = 2000, delayMs = 2000) {
+export async function waitForFunctionActive(functionName: string, maxRetries: number = 5, initialDelayMs: number = 2000, delayMs: number = 2000): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, initialDelayMs));
 
     for (let i = 0; i < maxRetries; i++) {
@@ -79,8 +82,8 @@ export async function waitForFunctionActive(functionName, maxRetries = 5, initia
             });
             
             const response = await lambdaClient.send(getCommand);
-            const state = response.Configuration.State;
-            const lastUpdateStatus = response.Configuration.LastUpdateStatus;
+            const state = response.Configuration?.State;
+            const lastUpdateStatus = response.Configuration?.LastUpdateStatus;
             
             if (state === 'Active' && lastUpdateStatus === 'Successful') {
                 return;
@@ -102,7 +105,7 @@ export async function waitForFunctionActive(functionName, maxRetries = 5, initia
     throw new Error(`Function ${functionName} did not become active within ${maxRetries * delayMs / 1000} seconds`);
 }
 
-export async function updateFunctionConfiguration(runtime, packageType, architecture, memorySize) {
+export async function updateFunctionConfiguration(runtime: string, packageType: PackageType, architecture: Architecture, memorySize: MemorySize): Promise<void> {
 
     const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const updateCommand = new UpdateFunctionConfigurationCommand({
@@ -121,7 +124,7 @@ export async function updateFunctionConfiguration(runtime, packageType, architec
     await waitForFunctionActive(functionName);
 }
 
-export async function invokeFunction(functionName) {
+export async function invokeFunction(functionName: string): Promise<any> {
     const invokeCommand = new InvokeCommand({
         FunctionName: functionName,
         InvocationType: "RequestResponse"
@@ -134,7 +137,7 @@ export async function invokeFunction(functionName) {
     return responsePayload;
 }
 
-export async function deleteFunction(functionName) {
+export async function deleteFunction(functionName: string): Promise<void> {
     const deleteCommand = new DeleteFunctionCommand({
         FunctionName: functionName,
     });
@@ -143,7 +146,7 @@ export async function deleteFunction(functionName) {
     // console.log(`Deleted function: ${functionName}`);
 }
 
-export async function queryCloudWatchLogs(functionName, hoursBack) {
+export async function queryCloudWatchLogs(functionName: string, hoursBack: number): Promise<ExecutionData[]> {
     const startCommand = new StartQueryCommand({
         logGroupName: `/aws/lambda/${functionName}`,
         startTime: Math.floor((Date.now() - hoursBack * 60 * 60 * 1000) / 1000),
@@ -158,32 +161,32 @@ export async function queryCloudWatchLogs(functionName, hoursBack) {
     const resultsCommand = new GetQueryResultsCommand({ queryId });
     const results = await cloudWatchLogsClient.send(resultsCommand);
 
-    const tableData = results.results.map((row, index) => {
+    const tableData = (results.results || []).map((row, index) => {
         const duration = row.find(field => field.field === '@duration')?.value;
         const initDuration = row.find(field => field.field === '@initDuration')?.value || '0';
         const billedDuration = row.find(field => field.field === '@billedDuration')?.value;
         const maxMemoryUsed = row.find(field => field.field === '@maxMemoryUsed')?.value;
 
         return {
-            initDuration: parseFloat(initDuration),
-            duration: parseFloat(duration),
-            billedDuration: parseFloat(billedDuration),
-            memoryUsed: parseInt(maxMemoryUsed) / 1_000_000,
+            initDuration: parseFloat(initDuration || '0'),
+            duration: parseFloat(duration || '0'),
+            billedDuration: parseFloat(billedDuration || '0'),
+            memoryUsed: parseInt(maxMemoryUsed || '0') / 1_000_000,
         };
     });
     
     return tableData;
 }
 
-export function getPackPath(runtime, architecture) {
+export function getPackPath(runtime: string, architecture: Architecture): string {
     return `runtimes/${runtime}/function_${architecture}.zip`;
 }
 
-export function getFunctionName(runtime, packageType, architecture, memorySize) {
+export function getFunctionName(runtime: string, packageType: PackageType, architecture: Architecture, memorySize: MemorySize): string {
     return `${runtime}-${packageType}-${architecture}-${memorySize}`;
 }
 
-export function formatSize(bytes) {
+export function formatSize(bytes: number): string {
     if (bytes === 0) {
         return '0 bytes';
     }

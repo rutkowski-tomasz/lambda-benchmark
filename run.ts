@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { analyze, createCustomImage, execute, loginToEcr, pack } from "./operations.js";
-import { type Architecture, type Execute, type MemorySize, type Build, type PackageType, type Result } from "./types.js";
+import { type Architecture, type Execute, type MemorySize, type Build, type PackageType, type Benchmark } from "./types.js";
 
 const ACCOUNT_ID = "024853653660";
 const REGION = "eu-central-1";
@@ -11,24 +11,24 @@ if (runType != 'execute' && runType != 'analyze') {
 }
 
 const runtimes = [
-    // 'dotnet8',
+    'dotnet8',
     'dotnet8_aot_al2023',
-    // 'llrt',
-    // 'nodejs22',
+    'llrt',
+    'nodejs22',
 ];
 
 const architectures: Architecture[] = [
     'arm64',
-    // 'x86_64',
+    'x86_64',
 ];
 
 const memorySizes: MemorySize[] = [
-    // 128,
+    128,
     256
 ];
 
 const packageTypes: PackageType[] = [
-    // 'zip',
+    'zip',
     'image'
 ];
 
@@ -59,19 +59,19 @@ if (runType == 'execute') {
     console.log(`Publishing ${runtimes.length * architectures.length} custom images...`);
     const imageSizes = await Promise.all(builds.map(x => createCustomImage(x, registryUrl)));
 
-    const initialResult: Result = JSON.parse(fs.readFileSync('data/result.json', 'utf8'));
-    initialResult.packageSizes = [ ...initialResult.packageSizes, ...zipSizes, ...imageSizes ];
-    fs.writeFileSync('data/result.json', JSON.stringify(initialResult));
+    const _benchmark: Benchmark = JSON.parse(fs.readFileSync('data/benchmark.json', 'utf8'));
+    _benchmark.packageSizes = [ ..._benchmark.packageSizes, ...zipSizes, ...imageSizes ];
+    fs.writeFileSync('data/benchmark.json', JSON.stringify(_benchmark));
 
     await Promise.all(executions.map(x => execute(x, 5)));
 }
 
 if (runType == 'analyze') {
-    const analysis = await Promise.all(executions.map(x => analyze(x, 1)));
+    const analysis = await Promise.all(executions.map(x => analyze(x, 0.5)));
 
-    const result: Result = JSON.parse(fs.readFileSync('data/result.json', 'utf8'));
-    result.analysis = analysis;
-    fs.writeFileSync('data/result.json', JSON.stringify(result));
+    const benchmark: Benchmark = JSON.parse(fs.readFileSync('data/benchmark.json', 'utf8'));
+    benchmark.analysis = analysis;
+    fs.writeFileSync('data/benchmark.json', JSON.stringify(benchmark));
 
     const totalExecutions = analysis.reduce((acc, x) => acc + x.executions.length, 0);
 

@@ -14,38 +14,44 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatSize } from "@/lib/utils";
+import { Architecture, Benchmark, MemorySize } from "./types";
 
-export function Chart({ executions }: { executions: any }) {
+export function Chart({ benchmark }: { benchmark: Benchmark }) {
   const chartData = [];
-  for (const execution of executions) {
+  for (const analysis of benchmark.analysis) {
     const avgDuration =
-      execution.executions.reduce(
+      analysis.executions.reduce(
         (acc: number, curr: any) => acc + curr.duration,
         0
-      ) / execution.executions.length;
+      ) / analysis.executions.length;
 
     const avgInitDuration =
-      execution.executions.reduce(
+      analysis.executions.reduce(
         (acc: number, curr: any) => acc + curr.initDuration,
         0
-      ) / execution.executions.length;
+      ) / analysis.executions.length;
 
-    const packageSize = execution.packageSize;
-    const avgMemoryUsed = execution.executions.reduce((acc: number, curr: any) => acc + curr.memoryUsed, 0) / execution.executions.length;
+    const avgBilledDuration =
+      analysis.executions.reduce(
+        (acc: number, curr: any) => acc + curr.billedDuration,
+        0
+      ) / analysis.executions.length;
+
+      
+    const packageSize = benchmark.packageSizes.find(x => x.runtime == analysis.runtime && x.architecture == analysis.architecture && x.packageType == analysis.packageType)?.size;
+    const avgMemoryUsed = analysis.executions.reduce((acc: number, curr: any) => acc + curr.memoryUsed, 0) / analysis.executions.length;
     chartData.push({
-      packageType: execution.packageType,
-      architecture: execution.architecture,
-      memorySize: execution.memorySize,
-      configuration: `${execution.runtime} ${execution.architecture} ${execution.memorySize}MB`,
+      packageType: analysis.packageType,
+      architecture: analysis.architecture,
+      memorySize: analysis.memorySize,
+      configuration: `${analysis.runtime} ${analysis.architecture} ${analysis.memorySize}MB`,
       duration: avgDuration,
       initDuration: avgInitDuration,
+      billedDuration: avgBilledDuration,
       packageSize: packageSize,
       memoryUsed: avgMemoryUsed,
-      executionsCount: execution.executions.length,
+      executionsCount: analysis.executions.length,
     });
-    console.log(
-      `${execution.runtime} ${execution.architecture} ${execution.memorySize}MB: ${avgDuration}`
-    );
   }
   chartData.sort((a: any, b: any) => a.configuration.localeCompare(b.configuration));
 
@@ -67,6 +73,14 @@ export function Chart({ executions }: { executions: any }) {
       color: "hsl(var(--chart-4))",
     },
   } satisfies ChartConfig;
+
+  const pricePerGbs: Record<Architecture, number> = {
+    'arm64': 0.0000133334,
+    'x86_64': 0.0000166667,
+  };
+  const calculateCost = (billedDuration: number, memorySize: MemorySize, architecture: Architecture) => { 
+    return (billedDuration / 1000) * (memorySize / 1024) * pricePerGbs[architecture];
+  };
 
   return (
     <Card>
@@ -122,6 +136,12 @@ export function Chart({ executions }: { executions: any }) {
                           </div>
                           <div className="flex items-center gap-2 text-[0.70rem]">
                             Package Type: {data.packageType}
+                          </div>
+                          <div className="flex items-center gap-2 text-[0.70rem]">
+                            Avg Billed Duration: {data.billedDuration.toFixed(1)} ms
+                          </div>
+                          <div className="flex items-center gap-2 text-[0.70rem]">
+                            Avg 1M invocations cost: ${(calculateCost(data.billedDuration, data.memorySize, data.architecture) * 1_000_000).toFixed(2)}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-[var(--chart-1)]" />

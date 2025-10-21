@@ -13,13 +13,14 @@ if (runType != 'execute' && runType != 'analyze') {
 const runtimes = [
     'dotnet8',
     'dotnet8_aot_al2023',
+    'dotnet9_aot_al2023',
     'llrt',
     'nodejs22',
 ];
 
 const architectures: Architecture[] = [
     'arm64',
-    'x86_64',
+    // 'x86_64',
 ];
 
 const memorySizes: MemorySize[] = [
@@ -28,7 +29,7 @@ const memorySizes: MemorySize[] = [
 ];
 
 const packageTypes: PackageType[] = [
-    'zip',
+    // 'zip',
     'image'
 ];
 
@@ -50,8 +51,12 @@ const executions: Execute[] =
         packageType,
     })))));
 
+if (!fs.existsSync('data/benchmark.json')) {
+    fs.writeFileSync('data/benchmark.json', '{}');
+}
+
 if (runType == 'execute') {
-    console.log(`Creating ${runtimes.length * architectures.length} function packages...`);
+    console.log(`Creating ${runtimes.length * architectures.length} packages...`);
     const zipSizes = await Promise.all(builds.map(pack));
 
     const registryUrl = await loginToEcr(REGION, ACCOUNT_ID);
@@ -60,14 +65,14 @@ if (runType == 'execute') {
     const imageSizes = await Promise.all(builds.map(x => createCustomImage(x, registryUrl)));
 
     const _benchmark: Benchmark = JSON.parse(fs.readFileSync('data/benchmark.json', 'utf8'));
-    _benchmark.packageSizes = [ ..._benchmark.packageSizes, ...zipSizes, ...imageSizes ];
+    _benchmark.packageSizes = [ ..._benchmark.packageSizes || [], ...zipSizes, ...imageSizes ];
     fs.writeFileSync('data/benchmark.json', JSON.stringify(_benchmark));
 
     await Promise.all(executions.map(x => execute(x, 5)));
 }
 
 if (runType == 'analyze') {
-    const analysis = await Promise.all(executions.map(x => analyze(x, 0.5)));
+    const analysis = await Promise.all(executions.map(x => analyze(x, 0.3)));
 
     const benchmark: Benchmark = JSON.parse(fs.readFileSync('data/benchmark.json', 'utf8'));
     benchmark.analysis = analysis;

@@ -72,7 +72,7 @@ export async function createOrUpdateFunctionCode(runtime: string, architecture: 
     console.log(`[success] Deployed ${functionName}`);
 }
 
-export async function waitForFunctionActive(functionName: string, maxRetries: number = 5, initialDelayMs: number = 2000, delayMs: number = 2000): Promise<void> {
+export async function waitForFunctionActive(functionName: string, maxRetries: number = 10, initialDelayMs: number = 4000, delayMs: number = 2000): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, initialDelayMs));
 
     for (let i = 0; i < maxRetries; i++) {

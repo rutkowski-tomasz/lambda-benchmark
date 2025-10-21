@@ -33,4 +33,4 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
     1. llrt
     1. nodejs22
 1. Implement dotnet8 aot on AL2
-1. Implement dotnet8 aot on AL2023
+1. Implement dotnet9 aot on AL2023

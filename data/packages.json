@@ -1,6 +1,4 @@
 {
-  "dotnet8_aot_al2023-zip-x86_64": 8502393,
   "dotnet8_aot_al2023-zip-arm64": 8226824,
-  "dotnet8_aot_al2023-image-arm64": 157017333,
-  "dotnet8_aot_al2023-image-x86_64": 135859862
+  "dotnet8_aot_al2023-image-arm64": 157017333
 }

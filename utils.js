@@ -108,6 +108,11 @@ export async function updateFunctionConfiguration(runtime, packageType, architec
     const updateCommand = new UpdateFunctionConfigurationCommand({
         FunctionName: functionName,
         MemorySize: memorySize,
+        Environment: {
+            Variables: {
+                "REDEPLOY": new Date().getTime().toString()
+            }
+        }
     });
 
     await lambdaClient.send(updateCommand);
@@ -138,7 +143,7 @@ export async function deleteFunction(functionName) {
     // console.log(`Deleted function: ${functionName}`);
 }
 
-export async function queryCloudWatchLogs(functionName, hoursBack = 6) {
+export async function queryCloudWatchLogs(functionName, hoursBack) {
     const startCommand = new StartQueryCommand({
         logGroupName: `/aws/lambda/${functionName}`,
         startTime: Math.floor((Date.now() - hoursBack * 60 * 60 * 1000) / 1000),

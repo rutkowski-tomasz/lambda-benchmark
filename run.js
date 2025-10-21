@@ -31,7 +31,7 @@ const memorySizes = [
 ];
 
 const packageTypes = [
-    // 'zip',
+    'zip',
     'image'
 ];
 

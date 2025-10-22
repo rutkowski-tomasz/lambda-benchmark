@@ -39,31 +39,31 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
     const avgDuration =
       analysis.executions.reduce(
         (acc: number, curr: ExecutionData) => acc + curr.duration,
-        0,
+        0
       ) / analysis.executions.length;
 
     const avgInitDuration =
       analysis.executions.reduce(
         (acc: number, curr: ExecutionData) => acc + curr.initDuration,
-        0,
+        0
       ) / analysis.executions.length;
 
     const avgBilledDuration =
       analysis.executions.reduce(
         (acc: number, curr: ExecutionData) => acc + curr.billedDuration,
-        0,
+        0
       ) / analysis.executions.length;
 
     const packageSize = benchmark.packageSizes.find(
       (x) =>
         x.runtime === analysis.runtime &&
         x.architecture === analysis.architecture &&
-        x.packageType === analysis.packageType,
+        x.packageType === analysis.packageType
     )?.size;
     const avgMemoryUsed =
       analysis.executions.reduce(
         (acc: number, curr: ExecutionData) => acc + curr.memoryUsed,
-        0,
+        0
       ) / analysis.executions.length;
     chartData.push({
       packageType: analysis.packageType,
@@ -79,7 +79,7 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
     });
   }
   chartData.sort((a: ChartData, b: ChartData) =>
-    a.configuration.localeCompare(b.configuration),
+    a.configuration.localeCompare(b.configuration)
   );
 
   const chartConfig = {
@@ -108,7 +108,7 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
   const calculateCost = (
     billedDuration: number,
     memorySize: MemorySize,
-    architecture: Architecture,
+    architecture: Architecture
   ) => {
     return (
       (billedDuration / 1000) * (memorySize / 1024) * pricePerGbs[architecture]
@@ -180,7 +180,7 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
                               calculateCost(
                                 data.billedDuration,
                                 data.memorySize,
-                                data.architecture,
+                                data.architecture
                               ) * 1_000_000
                             ).toFixed(2)}
                           </div>

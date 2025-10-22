@@ -19,6 +19,7 @@ import type {
   ExecutionData,
   MemorySize,
 } from "./types";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type ChartData = {
   packageType: string;
@@ -118,10 +119,15 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Lambda Execution Performance</CardTitle>
-        <CardDescription>
-          Average execution duration by configuration
-        </CardDescription>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle>Lambda Execution Performance</CardTitle>
+            <CardDescription>
+              Average execution duration by configuration
+            </CardDescription>
+          </div>
+          <ThemeToggle />
+        </div>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[400px] w-full">

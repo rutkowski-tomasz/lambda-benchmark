@@ -1,45 +1,70 @@
 "use client";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+} from "@/components/ui/chart";
 import { formatSize } from "@/lib/utils";
-import { Architecture, Benchmark, MemorySize } from "./types";
+import type {
+  Architecture,
+  Benchmark,
+  ExecutionData,
+  MemorySize,
+} from "./types";
+
+type ChartData = {
+  packageType: string;
+  architecture: Architecture;
+  memorySize: MemorySize;
+  configuration: string;
+  duration: number;
+  initDuration: number;
+  billedDuration: number;
+  packageSize: number | undefined;
+  memoryUsed: number;
+  executionsCount: number;
+};
 
 export function Chart({ benchmark }: { benchmark: Benchmark }) {
-  const chartData = [];
+  const chartData: ChartData[] = [];
   for (const analysis of benchmark.analysis) {
     const avgDuration =
       analysis.executions.reduce(
-        (acc: number, curr: any) => acc + curr.duration,
-        0
+        (acc: number, curr: ExecutionData) => acc + curr.duration,
+        0,
       ) / analysis.executions.length;
 
     const avgInitDuration =
       analysis.executions.reduce(
-        (acc: number, curr: any) => acc + curr.initDuration,
-        0
+        (acc: number, curr: ExecutionData) => acc + curr.initDuration,
+        0,
       ) / analysis.executions.length;
 
     const avgBilledDuration =
       analysis.executions.reduce(
-        (acc: number, curr: any) => acc + curr.billedDuration,
-        0
+        (acc: number, curr: ExecutionData) => acc + curr.billedDuration,
+        0,
       ) / analysis.executions.length;
 
-      
-    const packageSize = benchmark.packageSizes.find(x => x.runtime == analysis.runtime && x.architecture == analysis.architecture && x.packageType == analysis.packageType)?.size;
-    const avgMemoryUsed = analysis.executions.reduce((acc: number, curr: any) => acc + curr.memoryUsed, 0) / analysis.executions.length;
+    const packageSize = benchmark.packageSizes.find(
+      (x) =>
+        x.runtime === analysis.runtime &&
+        x.architecture === analysis.architecture &&
+        x.packageType === analysis.packageType,
+    )?.size;
+    const avgMemoryUsed =
+      analysis.executions.reduce(
+        (acc: number, curr: ExecutionData) => acc + curr.memoryUsed,
+        0,
+      ) / analysis.executions.length;
     chartData.push({
       packageType: analysis.packageType,
       architecture: analysis.architecture,
@@ -53,7 +78,9 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
       executionsCount: analysis.executions.length,
     });
   }
-  chartData.sort((a: any, b: any) => a.configuration.localeCompare(b.configuration));
+  chartData.sort((a: ChartData, b: ChartData) =>
+    a.configuration.localeCompare(b.configuration),
+  );
 
   const chartConfig = {
     duration: {
@@ -75,11 +102,17 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
   } satisfies ChartConfig;
 
   const pricePerGbs: Record<Architecture, number> = {
-    'arm64': 0.0000133334,
-    'x86_64': 0.0000166667,
+    arm64: 0.0000133334,
+    x86_64: 0.0000166667,
   };
-  const calculateCost = (billedDuration: number, memorySize: MemorySize, architecture: Architecture) => { 
-    return (billedDuration / 1000) * (memorySize / 1024) * pricePerGbs[architecture];
+  const calculateCost = (
+    billedDuration: number,
+    memorySize: MemorySize,
+    architecture: Architecture,
+  ) => {
+    return (
+      (billedDuration / 1000) * (memorySize / 1024) * pricePerGbs[architecture]
+    );
   };
 
   return (
@@ -112,7 +145,7 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
               }}
               className="text-xs"
             />
-            <ChartTooltip 
+            <ChartTooltip
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
@@ -138,10 +171,18 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
                             Package Type: {data.packageType}
                           </div>
                           <div className="flex items-center gap-2 text-[0.70rem]">
-                            Avg Billed Duration: {data.billedDuration.toFixed(1)} ms
+                            Avg Billed Duration:{" "}
+                            {data.billedDuration.toFixed(1)} ms
                           </div>
                           <div className="flex items-center gap-2 text-[0.70rem]">
-                            Avg 1M invocations cost: ${(calculateCost(data.billedDuration, data.memorySize, data.architecture) * 1_000_000).toFixed(2)}
+                            Avg 1M invocations cost: $
+                            {(
+                              calculateCost(
+                                data.billedDuration,
+                                data.memorySize,
+                                data.architecture,
+                              ) * 1_000_000
+                            ).toFixed(2)}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-[var(--chart-1)]" />

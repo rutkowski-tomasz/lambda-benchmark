@@ -1,42 +1,42 @@
 export type Build = {
-    runtime: string;
-    architecture: Architecture;
+  runtime: string;
+  architecture: Architecture;
 };
 
 export type Execute = {
-    runtime: string;
-    architecture: Architecture;
-    memorySize: MemorySize;
-    packageType: PackageType;
+  runtime: string;
+  architecture: Architecture;
+  memorySize: MemorySize;
+  packageType: PackageType;
 };
 
-export type Architecture = 'arm64' | 'x86_64';
-export type PackageType = 'zip' | 'image';
+export type Architecture = "arm64" | "x86_64";
+export type PackageType = "zip" | "image";
 export type MemorySize = 128 | 256 | 512 | 1024;
 
 export type Analysis = {
-    runtime: string;
-    packageType: PackageType;
-    architecture: Architecture;
-    memorySize: MemorySize;
-    executions: any[];
+  runtime: string;
+  packageType: PackageType;
+  architecture: Architecture;
+  memorySize: MemorySize;
+  executions: ExecutionData[];
 };
 
 export type Benchmark = {
-    packageSizes: PackageSize[];
-    analysis: Analysis[];
-}
+  packageSizes: PackageSize[];
+  analysis: Analysis[];
+};
 
 export type PackageSize = {
-    runtime: string;
-    architecture: Architecture;
-    packageType: PackageType;
-    size: number;
-}
+  runtime: string;
+  architecture: Architecture;
+  packageType: PackageType;
+  size: number;
+};
 
 export type ExecutionData = {
-    initDuration: number;
-    duration: number;
-    billedDuration: number;
-    memoryUsed: number;
-}
+  initDuration: number;
+  duration: number;
+  billedDuration: number;
+  memoryUsed: number;
+};

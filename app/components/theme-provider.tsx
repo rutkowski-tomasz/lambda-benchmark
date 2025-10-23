@@ -74,10 +74,6 @@ export function ThemeProvider({
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
   if (context === undefined) {
-    // Return a default value during SSR instead of throwing
-    if (typeof window === "undefined") {
-      return { theme: "dark" as Theme, setTheme: () => {} };
-    }
     throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;

@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
@@ -19,7 +20,11 @@ import type {
   ExecutionData,
   MemorySize,
 } from "./types";
-import { ThemeToggle } from "@/components/theme-toggle";
+
+const ThemeToggle = dynamic(
+  () => import("@/components/theme-toggle").then((mod) => ({ default: mod.ThemeToggle })),
+  { ssr: false }
+);
 
 type ChartData = {
   packageType: string;

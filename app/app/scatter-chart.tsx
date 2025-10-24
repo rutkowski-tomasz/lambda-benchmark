@@ -223,7 +223,7 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[400px] w-full">
-          <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+          <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="avgDuration"
@@ -233,7 +233,7 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
               label={{
                 value: "Average Duration (ms)",
                 position: "insideBottom",
-                offset: -10,
+                offset: 0,
               }}
               className="text-xs"
             />

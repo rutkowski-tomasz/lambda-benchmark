@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Chart } from "./chart";
-import { CostDurationChart } from "./cost-duration-chart";
+import { CostAnalysis } from "./cost-analysis";
+import { ExecutionPerformance } from "./execution-performance";
+import { PackageColdstartAnalysis } from "./package-coldstart-analysis";
 import type { Benchmark } from "./types";
 
 export default function Home() {
@@ -20,8 +21,9 @@ export default function Home() {
           <ThemeToggle />
         </div>
         <div className="space-y-6">
-          <Chart benchmark={benchmark} />
-          <CostDurationChart benchmark={benchmark} />
+          <ExecutionPerformance benchmark={benchmark} />
+          <PackageColdstartAnalysis benchmark={benchmark} />
+          <CostAnalysis benchmark={benchmark} />
         </div>
       </div>
     </div>

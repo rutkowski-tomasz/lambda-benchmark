@@ -99,11 +99,13 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
   const runtimeSet = new Set<string>();
   const architectureSet = new Set<Architecture>();
   const memorySizeSet = new Set<MemorySize>();
+  const packageTypeSet = new Set<string>();
 
   for (const analysis of benchmark.analysis) {
     runtimeSet.add(analysis.runtime);
     architectureSet.add(analysis.architecture);
     memorySizeSet.add(analysis.memorySize);
+    packageTypeSet.add(analysis.packageType);
 
     const avgDuration =
       analysis.executions.reduce((acc, curr) => acc + curr.duration, 0) /
@@ -144,6 +146,7 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
   const runtimes = Array.from(runtimeSet).sort();
   const architectures = Array.from(architectureSet).sort();
   const memorySizes = Array.from(memorySizeSet).sort((a, b) => a - b);
+  const packageTypes = Array.from(packageTypeSet).sort();
 
   const [selectedRuntimes, setSelectedRuntimes] = useState<Set<string>>(
     () => new Set(runtimes)
@@ -154,14 +157,20 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
   const [selectedMemorySizes, setSelectedMemorySizes] = useState<
     Set<MemorySize>
   >(() => new Set(memorySizes));
+  const [selectedPackageTypes, setSelectedPackageTypes] = useState<Set<string>>(
+    () => new Set(packageTypes)
+  );
   const [isRuntimeDropdownOpen, setIsRuntimeDropdownOpen] = useState(false);
   const [isArchitectureDropdownOpen, setIsArchitectureDropdownOpen] =
     useState(false);
   const [isMemorySizeDropdownOpen, setIsMemorySizeDropdownOpen] =
     useState(false);
+  const [isPackageTypeDropdownOpen, setIsPackageTypeDropdownOpen] =
+    useState(false);
   const runtimeDropdownRef = useRef<HTMLDivElement>(null);
   const architectureDropdownRef = useRef<HTMLDivElement>(null);
   const memorySizeDropdownRef = useRef<HTMLDivElement>(null);
+  const packageTypeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -183,12 +192,19 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
       ) {
         setIsMemorySizeDropdownOpen(false);
       }
+      if (
+        packageTypeDropdownRef.current &&
+        !packageTypeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsPackageTypeDropdownOpen(false);
+      }
     };
 
     if (
       isRuntimeDropdownOpen ||
       isArchitectureDropdownOpen ||
-      isMemorySizeDropdownOpen
+      isMemorySizeDropdownOpen ||
+      isPackageTypeDropdownOpen
     ) {
       document.addEventListener("mousedown", handleClickOutside);
       return () =>
@@ -198,6 +214,7 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
     isRuntimeDropdownOpen,
     isArchitectureDropdownOpen,
     isMemorySizeDropdownOpen,
+    isPackageTypeDropdownOpen,
   ]);
 
   const chartColors = [
@@ -220,7 +237,8 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
     (d) =>
       selectedRuntimes.has(d.runtime) &&
       selectedArchitectures.has(d.architecture) &&
-      selectedMemorySizes.has(d.memorySize)
+      selectedMemorySizes.has(d.memorySize) &&
+      selectedPackageTypes.has(d.packageType)
   );
 
   const visibleRuntimes = Array.from(
@@ -339,6 +357,19 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
               dropdownRef={memorySizeDropdownRef}
               isOpen={isMemorySizeDropdownOpen}
               setIsOpen={setIsMemorySizeDropdownOpen}
+            />
+            <FilterDropdown
+              label="package type"
+              items={packageTypes}
+              selected={selectedPackageTypes}
+              onToggle={(v) =>
+                setSelectedPackageTypes(
+                  toggleSet(selectedPackageTypes, v as string)
+                )
+              }
+              dropdownRef={packageTypeDropdownRef}
+              isOpen={isPackageTypeDropdownOpen}
+              setIsOpen={setIsPackageTypeDropdownOpen}
             />
           </div>
         </CardAction>

@@ -44,6 +44,53 @@ type ScatterDataPoint = {
   executionsCount: number;
 };
 
+// Custom shape component for scatter plot points
+const CustomScatterShape = (props: {
+  cx?: number;
+  cy?: number;
+  fill?: string;
+  payload?: ScatterDataPoint;
+}) => {
+  const { cx = 0, cy = 0, fill, payload } = props;
+  const size = 8;
+
+  if (!payload) return null;
+
+  // Determine shape based on architecture and package type
+  const shapeKey = `${payload.architecture}-${payload.packageType}`;
+
+  switch (shapeKey) {
+    case "arm64-zip": // Circle
+      return <circle cx={cx} cy={cy} r={size / 2} fill={fill} />;
+    case "arm64-image": // Triangle
+      return (
+        <polygon
+          points={`${cx},${cy - size / 2} ${cx - size / 2},${cy + size / 2} ${cx + size / 2},${cy + size / 2}`}
+          fill={fill}
+        />
+      );
+    case "x86_64-zip": // Square
+      return (
+        <rect
+          x={cx - size / 2}
+          y={cy - size / 2}
+          width={size}
+          height={size}
+          fill={fill}
+        />
+      );
+    case "x86_64-image": // Diamond
+      return (
+        <polygon
+          points={`${cx},${cy - size / 2} ${cx + size / 2},${cy} ${cx},${cy + size / 2} ${cx - size / 2},${cy}`}
+          fill={fill}
+        />
+      );
+    default:
+      return <circle cx={cx} cy={cy} r={size / 2} fill={fill} />;
+  }
+};
+
 export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
   const pricePerGbs: Record<Architecture, number> = {
     arm64: 0.0000133334,
@@ -446,6 +493,7 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
                 name={runtime}
                 data={filteredData.filter((d) => d.runtime === runtime)}
                 fill={chartConfig[runtime].color}
+                shape={<CustomScatterShape />}
               />
             ))}
           </ScatterChart>

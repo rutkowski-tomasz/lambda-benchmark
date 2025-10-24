@@ -1,4 +1,6 @@
 "use client";
+import { ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -9,6 +11,7 @@ import {
 } from "recharts";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -114,6 +117,32 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
   // Sort runtimes alphabetically for consistent color assignment
   const runtimes = Array.from(runtimeSet).sort();
 
+  // State for selected runtimes (all selected by default)
+  const [selectedRuntimes, setSelectedRuntimes] = useState<Set<string>>(
+    () => new Set(runtimes)
+  );
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isDropdownOpen]);
+
   // Generate chart config with colors for each runtime
   const chartColors = [
     "var(--chart-1)",
@@ -131,6 +160,21 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
     };
   });
 
+  // Filter runtimes based on selection
+  const visibleRuntimes = runtimes.filter((runtime) =>
+    selectedRuntimes.has(runtime)
+  );
+
+  const toggleRuntime = (runtime: string) => {
+    const newSelected = new Set(selectedRuntimes);
+    if (newSelected.has(runtime)) {
+      newSelected.delete(runtime);
+    } else {
+      newSelected.add(runtime);
+    }
+    setSelectedRuntimes(newSelected);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -138,6 +182,44 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
         <CardDescription>
           Cost per million requests vs average duration by runtime
         </CardDescription>
+        <CardAction>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {selectedRuntimes.size} of {runtimes.length} runtimes selected
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute right-0 z-50 mt-2 w-64 rounded-md border bg-background shadow-lg">
+                <div className="max-h-80 overflow-y-auto p-2">
+                  {runtimes.map((runtime) => (
+                    <label
+                      key={runtime}
+                      className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-accent"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedRuntimes.has(runtime)}
+                        onChange={() => toggleRuntime(runtime)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <div
+                        className="h-3 w-3 rounded-sm"
+                        style={{
+                          backgroundColor: chartConfig[runtime].color,
+                        }}
+                      />
+                      <span>{runtime}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[400px] w-full">
@@ -218,7 +300,7 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
               }}
             />
             <Legend />
-            {runtimes.map((runtime) => (
+            {visibleRuntimes.map((runtime) => (
               <Scatter
                 key={runtime}
                 name={runtime}

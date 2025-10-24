@@ -13,74 +13,47 @@ import {
   ChartTooltip,
 } from "@/components/ui/chart";
 import { formatSize } from "@/lib/utils";
-import type {
-  Architecture,
-  Benchmark,
-  ExecutionData,
-  MemorySize,
-} from "./types";
+import type { Architecture, Benchmark, MemorySize } from "./types";
 
-type ChartData = {
-  packageType: string;
-  architecture: Architecture;
-  memorySize: MemorySize;
-  configuration: string;
-  duration: number;
-  initDuration: number;
-  billedDuration: number;
-  packageSize: number | undefined;
-  memoryUsed: number;
-  executionsCount: number;
-};
+export function ExecutionPerformance({ benchmark }: { benchmark: Benchmark }) {
+  const chartData = benchmark.analysis
+    .map((analysis) => {
+      const avgDuration =
+        analysis.executions.reduce((acc, curr) => acc + curr.duration, 0) /
+        analysis.executions.length;
+      const avgInitDuration =
+        analysis.executions.reduce((acc, curr) => acc + curr.initDuration, 0) /
+        analysis.executions.length;
+      const avgBilledDuration =
+        analysis.executions.reduce(
+          (acc, curr) => acc + curr.billedDuration,
+          0
+        ) / analysis.executions.length;
+      const avgMemoryUsed =
+        analysis.executions.reduce((acc, curr) => acc + curr.memoryUsed, 0) /
+        analysis.executions.length;
+      const packageSize = benchmark.packageSizes.find(
+        (x) =>
+          x.runtime === analysis.runtime &&
+          x.architecture === analysis.architecture &&
+          x.packageType === analysis.packageType
+      )?.size;
 
-export function Chart({ benchmark }: { benchmark: Benchmark }) {
-  const chartData: ChartData[] = [];
-  for (const analysis of benchmark.analysis) {
-    const avgDuration =
-      analysis.executions.reduce(
-        (acc: number, curr: ExecutionData) => acc + curr.duration,
-        0
-      ) / analysis.executions.length;
-
-    const avgInitDuration =
-      analysis.executions.reduce(
-        (acc: number, curr: ExecutionData) => acc + curr.initDuration,
-        0
-      ) / analysis.executions.length;
-
-    const avgBilledDuration =
-      analysis.executions.reduce(
-        (acc: number, curr: ExecutionData) => acc + curr.billedDuration,
-        0
-      ) / analysis.executions.length;
-
-    const packageSize = benchmark.packageSizes.find(
-      (x) =>
-        x.runtime === analysis.runtime &&
-        x.architecture === analysis.architecture &&
-        x.packageType === analysis.packageType
-    )?.size;
-    const avgMemoryUsed =
-      analysis.executions.reduce(
-        (acc: number, curr: ExecutionData) => acc + curr.memoryUsed,
-        0
-      ) / analysis.executions.length;
-    chartData.push({
-      packageType: analysis.packageType,
-      architecture: analysis.architecture,
-      memorySize: analysis.memorySize,
-      configuration: `${analysis.runtime} ${analysis.architecture} ${analysis.memorySize}MB`,
-      duration: avgDuration,
-      initDuration: avgInitDuration,
-      billedDuration: avgBilledDuration,
-      packageSize: packageSize,
-      memoryUsed: avgMemoryUsed,
-      executionsCount: analysis.executions.length,
-    });
-  }
-  chartData.sort((a: ChartData, b: ChartData) =>
-    a.configuration.localeCompare(b.configuration)
-  );
+      return {
+        configuration: `${analysis.runtime} ${analysis.architecture} ${analysis.memorySize}MB`,
+        runtime: analysis.runtime,
+        packageType: analysis.packageType,
+        architecture: analysis.architecture,
+        memorySize: analysis.memorySize,
+        duration: avgDuration,
+        initDuration: avgInitDuration,
+        billedDuration: avgBilledDuration,
+        packageSize,
+        memoryUsed: avgMemoryUsed,
+        executionsCount: analysis.executions.length,
+      };
+    })
+    .sort((a, b) => a.configuration.localeCompare(b.configuration));
 
   const chartConfig = {
     duration: {
@@ -91,29 +64,19 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
       label: "Avg Init Duration (ms)",
       color: "hsl(var(--chart-2))",
     },
-    packageSize: {
-      label: "Package Size (MB)",
-      color: "hsl(var(--chart-3))",
-    },
-    memoryUsed: {
-      label: "Avg Memory Used (MB)",
-      color: "hsl(var(--chart-4))",
-    },
   } satisfies ChartConfig;
 
   const pricePerGbs: Record<Architecture, number> = {
     arm64: 0.0000133334,
     x86_64: 0.0000166667,
   };
+
   const calculateCost = (
     billedDuration: number,
     memorySize: MemorySize,
     architecture: Architecture
-  ) => {
-    return (
-      (billedDuration / 1000) * (memorySize / 1024) * pricePerGbs[architecture]
-    );
-  };
+  ) =>
+    (billedDuration / 1000) * (memorySize / 1024) * pricePerGbs[architecture];
 
   return (
     <Card>
@@ -147,34 +110,32 @@ export function Chart({ benchmark }: { benchmark: Benchmark }) {
             />
             <ChartTooltip
               content={({ active, payload, label }) => {
-                if (active && payload && payload.length) {
+                if (active && payload?.length) {
                   const data = payload[0].payload;
                   return (
                     <div className="rounded-lg border bg-background p-2 shadow-md">
                       <div className="grid gap-2">
-                        <div className="flex flex-col">
-                          <span className="text-[0.70rem] uppercase text-muted-foreground">
-                            {label}
-                          </span>
-                        </div>
+                        <span className="text-[0.70rem] uppercase text-muted-foreground">
+                          {label}
+                        </span>
                         <div className="grid gap-1">
-                          <div className="flex items-center gap-2 text-[0.70rem]">
+                          <div className="text-[0.70rem]">
                             Executions: {data.executionsCount}
                           </div>
-                          <div className="flex items-center gap-2 text-[0.70rem]">
+                          <div className="text-[0.70rem]">
                             Package Size: {formatSize(data.packageSize)}
                           </div>
-                          <div className="flex items-center gap-2 text-[0.70rem]">
+                          <div className="text-[0.70rem]">
                             Memory Used: {data.memoryUsed.toFixed(1)} MB
                           </div>
-                          <div className="flex items-center gap-2 text-[0.70rem]">
+                          <div className="text-[0.70rem]">
                             Package Type: {data.packageType}
                           </div>
-                          <div className="flex items-center gap-2 text-[0.70rem]">
+                          <div className="text-[0.70rem]">
                             Avg Billed Duration:{" "}
                             {data.billedDuration.toFixed(1)} ms
                           </div>
-                          <div className="flex items-center gap-2 text-[0.70rem]">
+                          <div className="text-[0.70rem]">
                             Avg 1M invocations cost: $
                             {(
                               calculateCost(

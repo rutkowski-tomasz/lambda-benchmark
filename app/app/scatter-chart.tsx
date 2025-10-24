@@ -63,9 +63,13 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
   // Transform data for scatter plot
   const scatterData: ScatterDataPoint[] = [];
   const runtimeSet = new Set<string>();
+  const architectureSet = new Set<Architecture>();
+  const memorySizeSet = new Set<MemorySize>();
 
   for (const analysis of benchmark.analysis) {
     runtimeSet.add(analysis.runtime);
+    architectureSet.add(analysis.architecture);
+    memorySizeSet.add(analysis.memorySize);
 
     const avgDuration =
       analysis.executions.reduce(
@@ -114,34 +118,68 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
     });
   }
 
-  // Sort runtimes alphabetically for consistent color assignment
+  // Sort and convert to arrays
   const runtimes = Array.from(runtimeSet).sort();
+  const architectures = Array.from(architectureSet).sort();
+  const memorySizes = Array.from(memorySizeSet).sort((a, b) => a - b);
 
-  // State for selected runtimes (all selected by default)
+  // State for selected filters (all selected by default)
   const [selectedRuntimes, setSelectedRuntimes] = useState<Set<string>>(
     () => new Set(runtimes)
   );
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedArchitectures, setSelectedArchitectures] = useState<
+    Set<Architecture>
+  >(() => new Set(architectures));
+  const [selectedMemorySizes, setSelectedMemorySizes] = useState<
+    Set<MemorySize>
+  >(() => new Set(memorySizes));
+  const [isRuntimeDropdownOpen, setIsRuntimeDropdownOpen] = useState(false);
+  const [isArchitectureDropdownOpen, setIsArchitectureDropdownOpen] =
+    useState(false);
+  const [isMemorySizeDropdownOpen, setIsMemorySizeDropdownOpen] =
+    useState(false);
+  const runtimeDropdownRef = useRef<HTMLDivElement>(null);
+  const architectureDropdownRef = useRef<HTMLDivElement>(null);
+  const memorySizeDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        runtimeDropdownRef.current &&
+        !runtimeDropdownRef.current.contains(event.target as Node)
       ) {
-        setIsDropdownOpen(false);
+        setIsRuntimeDropdownOpen(false);
+      }
+      if (
+        architectureDropdownRef.current &&
+        !architectureDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsArchitectureDropdownOpen(false);
+      }
+      if (
+        memorySizeDropdownRef.current &&
+        !memorySizeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsMemorySizeDropdownOpen(false);
       }
     };
 
-    if (isDropdownOpen) {
+    if (
+      isRuntimeDropdownOpen ||
+      isArchitectureDropdownOpen ||
+      isMemorySizeDropdownOpen
+    ) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [isDropdownOpen]);
+  }, [
+    isRuntimeDropdownOpen,
+    isArchitectureDropdownOpen,
+    isMemorySizeDropdownOpen,
+  ]);
 
   // Generate chart config with colors for each runtime
   const chartColors = [
@@ -160,10 +198,18 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
     };
   });
 
-  // Filter runtimes based on selection
-  const visibleRuntimes = runtimes.filter((runtime) =>
-    selectedRuntimes.has(runtime)
+  // Filter data based on all selections
+  const filteredData = scatterData.filter(
+    (d) =>
+      selectedRuntimes.has(d.runtime) &&
+      selectedArchitectures.has(d.architecture) &&
+      selectedMemorySizes.has(d.memorySize)
   );
+
+  // Get unique runtimes from filtered data for chart rendering
+  const visibleRuntimes = Array.from(
+    new Set(filteredData.map((d) => d.runtime))
+  ).sort();
 
   const toggleRuntime = (runtime: string) => {
     const newSelected = new Set(selectedRuntimes);
@@ -175,6 +221,26 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
     setSelectedRuntimes(newSelected);
   };
 
+  const toggleArchitecture = (architecture: Architecture) => {
+    const newSelected = new Set(selectedArchitectures);
+    if (newSelected.has(architecture)) {
+      newSelected.delete(architecture);
+    } else {
+      newSelected.add(architecture);
+    }
+    setSelectedArchitectures(newSelected);
+  };
+
+  const toggleMemorySize = (memorySize: MemorySize) => {
+    const newSelected = new Set(selectedMemorySizes);
+    if (newSelected.has(memorySize)) {
+      newSelected.delete(memorySize);
+    } else {
+      newSelected.add(memorySize);
+    }
+    setSelectedMemorySizes(newSelected);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -183,41 +249,112 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
           Cost per million requests vs average duration by runtime
         </CardDescription>
         <CardAction>
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {selectedRuntimes.size} of {runtimes.length} runtimes selected
-              <ChevronDown className="h-4 w-4" />
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute right-0 z-50 mt-2 w-64 rounded-md border bg-background shadow-lg">
-                <div className="max-h-80 overflow-y-auto p-2">
-                  {runtimes.map((runtime) => (
-                    <label
-                      key={runtime}
-                      className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-accent"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedRuntimes.has(runtime)}
-                        onChange={() => toggleRuntime(runtime)}
-                        className="h-4 w-4 rounded border-gray-300"
-                      />
-                      <div
-                        className="h-3 w-3 rounded-sm"
-                        style={{
-                          backgroundColor: chartConfig[runtime].color,
-                        }}
-                      />
-                      <span>{runtime}</span>
-                    </label>
-                  ))}
+          <div className="flex gap-2">
+            {/* Runtime Filter */}
+            <div className="relative" ref={runtimeDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsRuntimeDropdownOpen(!isRuntimeDropdownOpen)}
+                className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {selectedRuntimes.size}/{runtimes.length} runtimes
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              {isRuntimeDropdownOpen && (
+                <div className="absolute right-0 z-50 mt-2 w-64 rounded-md border bg-background shadow-lg">
+                  <div className="max-h-80 overflow-y-auto p-2">
+                    {runtimes.map((runtime) => (
+                      <label
+                        key={runtime}
+                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-accent"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedRuntimes.has(runtime)}
+                          onChange={() => toggleRuntime(runtime)}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <div
+                          className="h-3 w-3 rounded-sm"
+                          style={{
+                            backgroundColor: chartConfig[runtime].color,
+                          }}
+                        />
+                        <span>{runtime}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Architecture Filter */}
+            <div className="relative" ref={architectureDropdownRef}>
+              <button
+                type="button"
+                onClick={() =>
+                  setIsArchitectureDropdownOpen(!isArchitectureDropdownOpen)
+                }
+                className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {selectedArchitectures.size}/{architectures.length} arch
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              {isArchitectureDropdownOpen && (
+                <div className="absolute right-0 z-50 mt-2 w-48 rounded-md border bg-background shadow-lg">
+                  <div className="max-h-80 overflow-y-auto p-2">
+                    {architectures.map((architecture) => (
+                      <label
+                        key={architecture}
+                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-accent"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedArchitectures.has(architecture)}
+                          onChange={() => toggleArchitecture(architecture)}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <span>{architecture}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Memory Size Filter */}
+            <div className="relative" ref={memorySizeDropdownRef}>
+              <button
+                type="button"
+                onClick={() =>
+                  setIsMemorySizeDropdownOpen(!isMemorySizeDropdownOpen)
+                }
+                className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {selectedMemorySizes.size}/{memorySizes.length} memory
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              {isMemorySizeDropdownOpen && (
+                <div className="absolute right-0 z-50 mt-2 w-48 rounded-md border bg-background shadow-lg">
+                  <div className="max-h-80 overflow-y-auto p-2">
+                    {memorySizes.map((memorySize) => (
+                      <label
+                        key={memorySize}
+                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-accent"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedMemorySizes.has(memorySize)}
+                          onChange={() => toggleMemorySize(memorySize)}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <span>{memorySize} MB</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </CardAction>
       </CardHeader>
@@ -307,7 +444,7 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
               <Scatter
                 key={runtime}
                 name={runtime}
-                data={scatterData.filter((d) => d.runtime === runtime)}
+                data={filteredData.filter((d) => d.runtime === runtime)}
                 fill={chartConfig[runtime].color}
               />
             ))}

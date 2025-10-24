@@ -20,7 +20,7 @@ const runtimes = [
 
 const architectures: Architecture[] = [
     'arm64',
-    // 'x86_64',
+    'x86_64',
 ];
 
 const memorySizes: MemorySize[] = [
@@ -29,7 +29,7 @@ const memorySizes: MemorySize[] = [
 ];
 
 const packageTypes: PackageType[] = [
-    // 'zip',
+    'zip',
     'image'
 ];
 
@@ -51,6 +51,8 @@ const executions: Execute[] =
         packageType,
     })))));
 
+const invocationCount = 5;
+
 if (!fs.existsSync('data/benchmark.json')) {
     fs.writeFileSync('data/benchmark.json', '{}');
 }
@@ -68,11 +70,11 @@ if (runType == 'execute') {
     _benchmark.packageSizes = [ ..._benchmark.packageSizes || [], ...zipSizes, ...imageSizes ];
     fs.writeFileSync('data/benchmark.json', JSON.stringify(_benchmark));
 
-    await Promise.all(executions.map(x => execute(x, 5)));
+    await Promise.all(executions.map(x => execute(x, invocationCount)));
 }
 
 if (runType == 'analyze') {
-    const analysis = await Promise.all(executions.map(x => analyze(x, 0.3)));
+    const analysis = await Promise.all(executions.map(x => analyze(x, 1)));
 
     const benchmark: Benchmark = JSON.parse(fs.readFileSync('data/benchmark.json', 'utf8'));
     benchmark.analysis = analysis;
@@ -85,5 +87,6 @@ if (runType == 'analyze') {
     //     'x86_64': 0.0000166667,
     // };
     // const totalPrice = analysis.reduce((acc, x) => acc + x.executions.reduce((acc, curr) => acc + curr.billedDuration || 0, 0) / x.executions.length, 0) / 1000 * (pricePerGbs[x.architecture]);
-    console.log(`[success] Benchmarked ${totalExecutions} executions.`);
+    const expectedExecutionsCount = runtimes.length * architectures.length * memorySizes.length * packageTypes.length * invocationCount;
+    console.log(`[success] Benchmarked ${totalExecutions} executions (expected ${expectedExecutionsCount}).`);
 }

@@ -223,7 +223,7 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[400px] w-full">
-          <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+          <ScatterChart margin={{ top: 20, right: 30, left: 30, bottom: 80 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="avgDuration"
@@ -239,11 +239,11 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
             />
             <YAxis
               dataKey="costPerMillion"
-              name="Cost per Million"
+              name="Cost per 1M"
               unit=" $"
               type="number"
               label={{
-                value: "Cost per Million Requests ($)",
+                value: "Cost per 1M Requests ($)",
                 angle: -90,
                 position: "insideLeft",
               }}
@@ -299,7 +299,10 @@ export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
                 return null;
               }}
             />
-            <Legend />
+            <Legend
+              verticalAlign="bottom"
+              wrapperStyle={{ paddingTop: "20px" }}
+            />
             {visibleRuntimes.map((runtime) => (
               <Scatter
                 key={runtime}

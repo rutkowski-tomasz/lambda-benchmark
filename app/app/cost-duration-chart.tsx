@@ -91,7 +91,7 @@ const CustomScatterShape = (props: {
   }
 };
 
-export function ScatterPlotChart({ benchmark }: { benchmark: Benchmark }) {
+export function CostDurationChart({ benchmark }: { benchmark: Benchmark }) {
   const pricePerGbs: Record<Architecture, number> = {
     arm64: 0.0000133334,
     x86_64: 0.0000166667,

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Chart } from "./chart";
-import { ScatterPlotChart } from "./scatter-chart";
+import { CostDurationChart } from "./cost-duration-chart";
 import type { Benchmark } from "./types";
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
         </div>
         <div className="space-y-6">
           <Chart benchmark={benchmark} />
-          <ScatterPlotChart benchmark={benchmark} />
+          <CostDurationChart benchmark={benchmark} />
         </div>
       </div>
     </div>

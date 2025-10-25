@@ -42,8 +42,7 @@ export async function createOrUpdateFunctionCode(runtime: string, architecture: 
         const createCommand = new CreateFunctionCommand(createCommandInput);
 
         await lambdaClient.send(createCommand);
-        // console.log(`Created function: ${functionName} with architecture: ${architecture}`);
-        
+
         await waitForFunctionActive(functionName);
         
     } catch (error: any) {
@@ -61,8 +60,7 @@ export async function createOrUpdateFunctionCode(runtime: string, architecture: 
             }
             
             await lambdaClient.send(updateCodeCommand);
-            // console.log(`Function ${functionName} already exists, updating code...`);
-            
+
             await waitForFunctionActive(functionName);
         } else {
             throw error;
@@ -119,21 +117,77 @@ export async function updateFunctionConfiguration(runtime: string, packageType: 
     });
 
     await lambdaClient.send(updateCommand);
-    // console.log(`Updated function configuration: ${functionName} to memory size: ${memorySize}`);
-    
+
     await waitForFunctionActive(functionName);
 }
 
-export async function invokeFunction(functionName: string): Promise<any> {
+export interface Input {
+    numbers: number[];
+}
+
+export interface Output {
+    numbers: number[];
+    min: number;
+}
+
+export function generateTestNumbers(arraySize: number): number[] {
+    const numbers: number[] = [];
+    for (let i = 0; i < arraySize; i++) {
+        numbers.push(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + 1);
+    }
+    return numbers;
+}
+
+export function serializeInput(numbers: number[]): string {
+    const input: Input = { numbers };
+    return JSON.stringify(input);
+}
+
+export function verifyNormalizedResponse(inputNumbers: number[], outputJson: string): boolean {
+    try {
+        const output: Output = JSON.parse(outputJson);
+
+        if (inputNumbers.length !== output.numbers.length) {
+            return false;
+        }
+
+        if (inputNumbers.length === 0) {
+            return false;
+        }
+
+        let min = inputNumbers[0];
+        for (let i = 1; i < inputNumbers.length; i++) {
+            if (inputNumbers[i] < min) {
+                min = inputNumbers[i];
+            }
+        }
+
+        if (output.min !== min) {
+            return false;
+        }
+
+        for (let i = 0; i < inputNumbers.length; i++) {
+            if (output.numbers[i] !== inputNumbers[i] - min) {
+                return false;
+            }
+        }
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+export async function invokeFunction(functionName: string, payload?: string): Promise<any> {
     const invokeCommand = new InvokeCommand({
         FunctionName: functionName,
-        InvocationType: "RequestResponse"
+        InvocationType: "RequestResponse",
+        Payload: payload ? new TextEncoder().encode(payload) : undefined
     });
-    
+
     const response = await lambdaClient.send(invokeCommand);
-    
+
     const responsePayload = JSON.parse(new TextDecoder().decode(response.Payload));
-    // console.log(`Invoked function ${functionName}:`, responsePayload);
     return responsePayload;
 }
 
@@ -143,7 +197,6 @@ export async function deleteFunction(functionName: string): Promise<void> {
     });
 
     await lambdaClient.send(deleteCommand);
-    // console.log(`Deleted function: ${functionName}`);
 }
 
 export async function queryCloudWatchLogs(functionName: string, hoursBack: number): Promise<ExecutionData[]> {

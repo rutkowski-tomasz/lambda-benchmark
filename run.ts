@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { analyze, createCustomImage, execute, loginToEcr, pack } from "./operations.js";
 import { type Architecture, type Execute, type MemorySize, type Build, type PackageType, type Benchmark } from "./types.js";
+import { getFunctionName } from "./utils.js";
 
 const ACCOUNT_ID = "024853653660";
 const REGION = "eu-central-1";
@@ -52,6 +53,7 @@ const executions: Execute[] =
     })))));
 
 const invocationCount = 5;
+const arraySize = 100;
 
 if (!fs.existsSync('data/benchmark.json')) {
     fs.writeFileSync('data/benchmark.json', '{}');
@@ -70,7 +72,14 @@ if (runType == 'execute') {
     _benchmark.packageSizes = [ ..._benchmark.packageSizes || [], ...zipSizes, ...imageSizes ];
     fs.writeFileSync('data/benchmark.json', JSON.stringify(_benchmark));
 
-    await Promise.all(executions.map(x => execute(x, invocationCount)));
+    const results = await Promise.all(executions.map(x => execute(x, invocationCount, arraySize)));
+    const failures = executions.filter((_, index) => !results[index]);
+
+    if (failures.length > 0) {
+        console.error(`\n[error] ${failures.length} function(s) failed:`);
+        failures.forEach(f => console.error(`  - ${getFunctionName(f.runtime, f.packageType, f.architecture, f.memorySize)}`));
+        process.exit(1);
+    }
 }
 
 if (runType == 'analyze') {

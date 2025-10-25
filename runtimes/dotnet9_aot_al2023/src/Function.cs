@@ -9,27 +9,37 @@ public class Function
 {
     private static async Task Main()
     {
-        Func<ILambdaContext, Response> handler = FunctionHandler;
+        Func<int[], ILambdaContext, int[]> handler = FunctionHandler;
         await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
             .Build()
             .RunAsync();
     }
 
-    public static Response FunctionHandler(ILambdaContext context)
+    public static int[] FunctionHandler(int[] numbers, ILambdaContext context)
     {
-        return new Response
+        if (numbers.Length == 0)
         {
-            message = "Hello from Lambda!"
-        };
+            throw new ArgumentException("Array cannot be empty");
+        }
+
+        int min = numbers[0];
+        for (int i = 1; i < numbers.Length; i++)
+        {
+            if (numbers[i] < min)
+                min = numbers[i];
+        }
+
+        int[] normalized = new int[numbers.Length];
+        for (int i = 0; i < numbers.Length; i++)
+        {
+            normalized[i] = numbers[i] - min;
+        }
+
+        return normalized;
     }
 }
 
-public class Response
-{
-    public required string message { get; set; }
-}
-
-[JsonSerializable(typeof(Response))]
+[JsonSerializable(typeof(int[]))]
 public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
 }

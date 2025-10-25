@@ -124,14 +124,59 @@ export async function updateFunctionConfiguration(runtime: string, packageType: 
     await waitForFunctionActive(functionName);
 }
 
-export async function invokeFunction(functionName: string): Promise<any> {
+export function generateTestPayload(): string {
+    // Generate random array of 100 positive integers from 1 to Number.MAX_SAFE_INTEGER
+    const arraySize = 100;
+    const numbers: number[] = [];
+    for (let i = 0; i < arraySize; i++) {
+        numbers.push(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + 1);
+    }
+    return JSON.stringify(numbers);
+}
+
+export function verifyNormalizedResponse(inputJson: string, outputJson: string): boolean {
+    try {
+        const input: number[] = JSON.parse(inputJson);
+        const output: number[] = JSON.parse(outputJson);
+
+        if (input.length !== output.length) {
+            return false;
+        }
+
+        if (input.length === 0) {
+            return false;
+        }
+
+        // Find the minimum value in the input array
+        let min = input[0];
+        for (let i = 1; i < input.length; i++) {
+            if (input[i] < min) {
+                min = input[i];
+            }
+        }
+
+        // Verify each output value is input[i] - min
+        for (let i = 0; i < input.length; i++) {
+            if (output[i] !== input[i] - min) {
+                return false;
+            }
+        }
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+export async function invokeFunction(functionName: string, payload?: string): Promise<any> {
     const invokeCommand = new InvokeCommand({
         FunctionName: functionName,
-        InvocationType: "RequestResponse"
+        InvocationType: "RequestResponse",
+        Payload: payload ? new TextEncoder().encode(payload) : undefined
     });
-    
+
     const response = await lambdaClient.send(invokeCommand);
-    
+
     const responsePayload = JSON.parse(new TextDecoder().decode(response.Payload));
     // console.log(`Invoked function ${functionName}:`, responsePayload);
     return responsePayload;

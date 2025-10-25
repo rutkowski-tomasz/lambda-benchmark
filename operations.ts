@@ -9,7 +9,9 @@ import {
     updateFunctionConfiguration,
     invokeFunction,
     deleteFunction,
-    queryCloudWatchLogs
+    queryCloudWatchLogs,
+    generateTestPayload,
+    verifyNormalizedResponse
 } from './utils.js';
 import { type Analysis, type Architecture, type Build, type Execute, type PackageType } from './types.js';
 
@@ -91,8 +93,10 @@ export async function execute(execute: Execute, invokeCount: number) {
 
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
 
-        const response = await invokeFunction(functionName);
-        if (response.message !== "Hello from Lambda!") {
+        const inputPayload = generateTestPayload();
+        const response = await invokeFunction(functionName, inputPayload);
+
+        if (!verifyNormalizedResponse(inputPayload, response)) {
             console.error(`[error] Invalid response for function ${functionName}`);
             continue;
         }

@@ -7,11 +7,28 @@ namespace LambdaBenchmark;
 
 public class Function
 {
-    public object FunctionHandler(object input, ILambdaContext context)
+    public string FunctionHandler(string json, ILambdaContext context)
     {
-        return new
+        int[] numbers = JsonSerializer.Deserialize<int[]>(json)!;
+
+        if (numbers.Length == 0)
         {
-            message = "Hello from Lambda!"
-        };
+            throw new ArgumentException("Array cannot be empty");
+        }
+
+        int min = numbers[0];
+        for (int i = 1; i < numbers.Length; i++)
+        {
+            if (numbers[i] < min)
+                min = numbers[i];
+        }
+
+        int[] normalized = new int[numbers.Length];
+        for (int i = 0; i < numbers.Length; i++)
+        {
+            normalized[i] = numbers[i] - min;
+        }
+
+        return JsonSerializer.Serialize(normalized);
     }
 }

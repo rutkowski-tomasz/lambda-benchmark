@@ -85,11 +85,11 @@ export async function loginToEcr(region: string, accountId: string) {
     return `${accountId}.dkr.ecr.${region}.amazonaws.com`;
 }
 
-export async function execute(execute: Execute, invokeCount: number, arraySize: number): Promise<string | null> {
+export async function execute(execute: Execute, invokeCount: number, arraySize: number): Promise<boolean> {
     const functionName = getFunctionName(execute.runtime, execute.packageType, execute.architecture, execute.memorySize);
     await createOrUpdateFunctionCode(execute.runtime, execute.architecture, execute.memorySize, execute.packageType);
 
-    let hasFailure = false;
+    let success = true;
 
     for (let i = 0; i < invokeCount; i++) {
         await updateFunctionConfiguration(execute.runtime, execute.packageType, execute.architecture, execute.memorySize);
@@ -102,14 +102,14 @@ export async function execute(execute: Execute, invokeCount: number, arraySize: 
 
         if (!verifyNormalizedResponse(inputNumbers, response)) {
             console.error(`[error] Invalid response for function ${functionName}`);
-            hasFailure = true;
+            success = false;
             continue;
         }
     }
 
     await deleteFunction(functionName);
 
-    return hasFailure ? functionName : null;
+    return success;
 }
 
 export async function analyze(execute: Execute, hoursBack: number): Promise<Analysis> {

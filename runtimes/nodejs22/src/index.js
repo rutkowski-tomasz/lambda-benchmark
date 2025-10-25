@@ -18,8 +18,10 @@ module.exports.handler = async (event) => {
         normalized[i] = numbers[i] - min;
     }
 
-    return {
+    const output = {
         numbers: normalized,
         min: min
     };
+
+    return JSON.stringify(output);
 };

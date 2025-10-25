@@ -121,11 +121,11 @@ export async function updateFunctionConfiguration(runtime: string, packageType: 
     await waitForFunctionActive(functionName);
 }
 
-export interface NormalizeInput {
+export interface Input {
     numbers: number[];
 }
 
-export interface NormalizeOutput {
+export interface Output {
     numbers: number[];
     min: number;
 }
@@ -139,13 +139,13 @@ export function generateTestNumbers(arraySize: number): number[] {
 }
 
 export function serializeInput(numbers: number[]): string {
-    const input: NormalizeInput = { numbers };
+    const input: Input = { numbers };
     return JSON.stringify(input);
 }
 
 export function verifyNormalizedResponse(inputNumbers: number[], outputJson: string): boolean {
     try {
-        const output: NormalizeOutput = JSON.parse(outputJson);
+        const output: Output = JSON.parse(outputJson);
 
         if (inputNumbers.length !== output.numbers.length) {
             return false;

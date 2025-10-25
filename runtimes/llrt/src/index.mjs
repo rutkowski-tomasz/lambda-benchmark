@@ -18,8 +18,10 @@ export const handler = async (event, context) => {
         normalized[i] = numbers[i] - min;
     }
 
-    return {
+    const output = {
         numbers: normalized,
         min: min
     };
+
+    return JSON.stringify(output);
 };

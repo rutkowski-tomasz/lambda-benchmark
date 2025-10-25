@@ -5,18 +5,31 @@ using System.Text.Json.Serialization;
 
 namespace LambdaBenchmark;
 
+public class NormalizeInput
+{
+    public int[] numbers { get; set; } = Array.Empty<int>();
+}
+
+public class NormalizeOutput
+{
+    public int[] numbers { get; set; } = Array.Empty<int>();
+    public int min { get; set; }
+}
+
 public class Function
 {
     private static async Task Main()
     {
-        Func<int[], ILambdaContext, int[]> handler = FunctionHandler;
+        Func<NormalizeInput, ILambdaContext, NormalizeOutput> handler = FunctionHandler;
         await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
             .Build()
             .RunAsync();
     }
 
-    public static int[] FunctionHandler(int[] numbers, ILambdaContext context)
+    public static NormalizeOutput FunctionHandler(NormalizeInput input, ILambdaContext context)
     {
+        int[] numbers = input.numbers;
+
         if (numbers.Length == 0)
         {
             throw new ArgumentException("Array cannot be empty");
@@ -35,11 +48,16 @@ public class Function
             normalized[i] = numbers[i] - min;
         }
 
-        return normalized;
+        return new NormalizeOutput
+        {
+            numbers = normalized,
+            min = min
+        };
     }
 }
 
-[JsonSerializable(typeof(int[]))]
+[JsonSerializable(typeof(NormalizeInput))]
+[JsonSerializable(typeof(NormalizeOutput))]
 public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
 }

@@ -5,11 +5,22 @@ using System.Text.Json;
 
 namespace LambdaBenchmark;
 
+public class NormalizeInput
+{
+    public int[] numbers { get; set; } = Array.Empty<int>();
+}
+
+public class NormalizeOutput
+{
+    public int[] numbers { get; set; } = Array.Empty<int>();
+    public int min { get; set; }
+}
+
 public class Function
 {
-    public string FunctionHandler(string json, ILambdaContext context)
+    public NormalizeOutput FunctionHandler(NormalizeInput input, ILambdaContext context)
     {
-        int[] numbers = JsonSerializer.Deserialize<int[]>(json)!;
+        int[] numbers = input.numbers;
 
         if (numbers.Length == 0)
         {
@@ -29,6 +40,10 @@ public class Function
             normalized[i] = numbers[i] - min;
         }
 
-        return JsonSerializer.Serialize(normalized);
+        return new NormalizeOutput
+        {
+            numbers = normalized,
+            min = min
+        };
     }
 }

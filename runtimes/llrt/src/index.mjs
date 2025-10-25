@@ -1,5 +1,6 @@
 export const handler = async (event, context) => {
-    const numbers = JSON.parse(event);
+    const input = JSON.parse(event);
+    const numbers = input.numbers;
 
     if (numbers.length === 0) {
         throw new Error("Array cannot be empty");
@@ -17,5 +18,8 @@ export const handler = async (event, context) => {
         normalized[i] = numbers[i] - min;
     }
 
-    return JSON.stringify(normalized);
+    return {
+        numbers: normalized,
+        min: min
+    };
 };

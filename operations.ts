@@ -10,7 +10,8 @@ import {
     invokeFunction,
     deleteFunction,
     queryCloudWatchLogs,
-    generateTestPayload,
+    generateTestNumbers,
+    serializeInput,
     verifyNormalizedResponse
 } from './utils.js';
 import { type Analysis, type Architecture, type Build, type Execute, type PackageType } from './types.js';
@@ -84,25 +85,31 @@ export async function loginToEcr(region: string, accountId: string) {
     return `${accountId}.dkr.ecr.${region}.amazonaws.com`;
 }
 
-export async function execute(execute: Execute, invokeCount: number) {
+export async function execute(execute: Execute, invokeCount: number, arraySize: number): Promise<string | null> {
     const functionName = getFunctionName(execute.runtime, execute.packageType, execute.architecture, execute.memorySize);
     await createOrUpdateFunctionCode(execute.runtime, execute.architecture, execute.memorySize, execute.packageType);
+
+    let hasFailure = false;
 
     for (let i = 0; i < invokeCount; i++) {
         await updateFunctionConfiguration(execute.runtime, execute.packageType, execute.architecture, execute.memorySize);
 
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
 
-        const inputPayload = generateTestPayload();
+        const inputNumbers = generateTestNumbers(arraySize);
+        const inputPayload = serializeInput(inputNumbers);
         const response = await invokeFunction(functionName, inputPayload);
 
-        if (!verifyNormalizedResponse(inputPayload, response)) {
+        if (!verifyNormalizedResponse(inputNumbers, response)) {
             console.error(`[error] Invalid response for function ${functionName}`);
+            hasFailure = true;
             continue;
         }
     }
 
     await deleteFunction(functionName);
+
+    return hasFailure ? functionName : null;
 }
 
 export async function analyze(execute: Execute, hoursBack: number): Promise<Analysis> {

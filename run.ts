@@ -52,6 +52,7 @@ const executions: Execute[] =
     })))));
 
 const invocationCount = 5;
+const arraySize = 100;
 
 if (!fs.existsSync('data/benchmark.json')) {
     fs.writeFileSync('data/benchmark.json', '{}');
@@ -70,7 +71,14 @@ if (runType == 'execute') {
     _benchmark.packageSizes = [ ..._benchmark.packageSizes || [], ...zipSizes, ...imageSizes ];
     fs.writeFileSync('data/benchmark.json', JSON.stringify(_benchmark));
 
-    await Promise.all(executions.map(x => execute(x, invocationCount)));
+    const results = await Promise.all(executions.map(x => execute(x, invocationCount, arraySize)));
+    const failures = results.filter((f): f is string => f !== null);
+
+    if (failures.length > 0) {
+        console.error(`\n[error] ${failures.length} function(s) failed:`);
+        failures.forEach(f => console.error(`  - ${f}`));
+        process.exit(1);
+    }
 }
 
 if (runType == 'analyze') {

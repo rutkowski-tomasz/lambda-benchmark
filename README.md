@@ -30,11 +30,7 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
  
 # 🛣️ Roadmap
 
-1. Weekly execution in GitHub action
-1. Weekly analysis in GitHub action
-1. Cleanup run.ts
-1. Move analysis to separate file
-1. Remove operations.ts
+1. Adjust FE to new contract
 1. Transform init.sh to OpenTofu
 1. Runtimes
 - Rust

@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "execute": "pnpm tsx run execute",
-    "analyze": "pnpm tsx run analyze"
+    "analyze": "pnpm tsx run analyze",
+    "publish": "pnpm tsx run publish"
   },
   "keywords": [],
   "author": "",

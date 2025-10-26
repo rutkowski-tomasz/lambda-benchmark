@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { analyze, createCustomImage, execute, loginToEcr, pack } from "./operations.js";
-import { type Architecture, type Execute, type MemorySize, type Build, type PackageType, type Benchmark } from "./types.js";
+import { type Architecture, type Execute, type MemorySize, type PublishConfiguration, type PackageType, type Benchmark } from "./types.js";
 import { getFunctionName } from "./utils.js";
 
 const ACCOUNT_ID = "024853653660";
@@ -34,7 +34,7 @@ const packageTypes: PackageType[] = [
     'image'
 ];
 
-const builds: Build[] =
+const builds: PublishConfiguration[] =
     runtimes.flatMap(runtime =>
     architectures.map(architecture => ({
         runtime,

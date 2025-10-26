@@ -1,4 +1,4 @@
-export type Build = {
+export type PublishConfiguration = {
     runtime: string;
     architecture: Architecture;
 };

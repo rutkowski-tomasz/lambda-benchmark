@@ -2,14 +2,13 @@ import fs from 'fs';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { type Architecture } from "./types.js";
 import { execSync } from 'child_process';
-import { formatSize } from './utils.js';
+import { getAwsConfig } from './utils.js';
 
-const ACCOUNT_ID = "024853653660";
-const REGION = "eu-central-1";
-const S3_BUCKET = "lambda-benchmark-packages";
-const REGISTRY_URL = `${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com`;
+const { accountId, region } = await getAwsConfig();
+const s3Bucket = "lambda-benchmark-packages";
+const registryUrl = `${accountId}.dkr.ecr.${region}.amazonaws.com`;
 
-const s3Client = new S3Client({ region: REGION });
+const s3Client = new S3Client();
 
 const runtime = process.argv[2] as string;
 const architecture = process.argv[3] as Architecture;
@@ -24,7 +23,7 @@ console.log(`[publish] Creating docker image`);
 const image = await createAndPushImage(runtime, architecture);
 
 console.log(`[publish] Logging in to ECR`);
-execSync(`aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${REGISTRY_URL}`);
+execSync(`aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registryUrl}`);
 
 console.log(`[publish] Pushing ${image.tag} to ECR`);
 execSync(`docker push ${image.tag}`);
@@ -64,10 +63,11 @@ export async function uploadToS3(path: string): Promise<void> {
     const zipContent = fs.readFileSync(path);
 
     await s3Client.send(new PutObjectCommand({
-        Bucket: S3_BUCKET,
+        Bucket: s3Bucket,
         Key: path,
         Body: zipContent,
         ContentType: 'application/zip',
+        StorageClass: 'STANDARD_IA',
         Metadata: {
             runtime,
             architecture,
@@ -77,8 +77,7 @@ export async function uploadToS3(path: string): Promise<void> {
 }
 
 export async function createAndPushImage(runtime: string, architecture: Architecture): Promise<{ tag: string, size: number }> {
-    const configFile = fs.readFileSync(`runtimes/${runtime}/config.json`, 'utf8');
-    const config = JSON.parse(configFile);
+    const config = JSON.parse(fs.readFileSync(`runtimes/${runtime}/config.json`, 'utf8'));
     const platform = architecture === 'arm64' ? 'linux/arm64' : 'linux/amd64';
     const extractPath = `runtimes/${runtime}/function_${architecture}`;
 
@@ -88,9 +87,27 @@ export async function createAndPushImage(runtime: string, architecture: Architec
     
     execSync(`unzip runtimes/${runtime}/function_${architecture}.zip -d ${extractPath}`);
 
-    const tag = `${REGISTRY_URL}/lambda-benchmark:${runtime}-${architecture}`;
+    const tag = `${registryUrl}/lambda-benchmark:${runtime}-${architecture}`;
     const buildCommand = `docker build --platform ${platform} runtimes/${runtime} -f Dockerfile.custom_image --build-arg BASE_IMAGE=${config.baseImage} --build-arg HANDLER=${config.handler} --build-arg ARCHITECTURE=${architecture} -t ${tag}`;
     execSync(buildCommand);
 
     return { tag, size: parseInt(execSync(`docker inspect -f '{{ .Size }}' ${tag}`, { encoding: 'utf-8' }).trim()) };
+}
+
+export function formatSize(bytes: number): string {
+    if (bytes === 0) {
+        return '0 bytes';
+    }
+    
+    const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    const k = 1024;
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const value = bytes / Math.pow(k, i);
+
+    if (value >= 10) {
+        return value.toFixed(0) + ' ' + units[i];
+    }
+
+    return value.toFixed(1) + ' ' + units[i];
 }

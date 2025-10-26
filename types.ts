@@ -1,4 +1,4 @@
-export type Execute = {
+export type Spec = {
     runtime: string;
     architecture: Architecture;
     memorySize: MemorySize;

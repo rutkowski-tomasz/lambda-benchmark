@@ -133,20 +133,14 @@ export function generateInputAndExpectedOutput(arraySize: number): { input: Inpu
 }
 
 export function verifyNormalizedResponse(output: Output, expectedOutput: Output): boolean {
-    try {
-        // console.log('expectedOutput', expectedOutput);
-        // console.log('output', output);
+    // console.log('expectedOutput', expectedOutput);
+    // console.log('output', output);
 
-        return output.min === expectedOutput.min
-            && expectedOutput.inputNumbers.length === output.inputNumbers.length
-            && expectedOutput.normalizedNumbers.length === output.normalizedNumbers.length
-            && output.inputNumbers.every((x, i) => x === expectedOutput.inputNumbers[i])
-            && output.normalizedNumbers.every((x, i) => x === expectedOutput.normalizedNumbers[i])
-
-    } catch (error) {
-        console.error('error', error);
-        return false;
-    }
+    return output.min === expectedOutput.min
+        && expectedOutput.inputNumbers.length === output.inputNumbers.length
+        && expectedOutput.normalizedNumbers.length === output.normalizedNumbers.length
+        && output.inputNumbers.every((x, i) => x === expectedOutput.inputNumbers[i])
+        && output.normalizedNumbers.every((x, i) => x === expectedOutput.normalizedNumbers[i])
 }
 
 export async function invokeFunction(functionName: string, payload: string): Promise<any> {

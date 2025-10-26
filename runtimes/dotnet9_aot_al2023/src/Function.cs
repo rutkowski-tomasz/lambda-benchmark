@@ -14,13 +14,8 @@ public class Input
 
 public class Output
 {
-    [JsonPropertyName("inputNumbers")]
     public int[] InputNumbers { get; set; } = [];
-
-    [JsonPropertyName("normalizedNumbers")]
     public int[] NormalizedNumbers { get; set; } = [];
-
-    [JsonPropertyName("min")]
     public int Min { get; set; }
 }
 
@@ -68,6 +63,7 @@ public class Function
 [JsonSerializable(typeof(Output))]
 [JsonSerializable(typeof(APIGatewayProxyRequest))]
 [JsonSerializable(typeof(APIGatewayProxyResponse))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
 }

@@ -29,7 +29,7 @@ const packageTypes: PackageType[] = [
     'image'
 ];
 
-const executions: Spec[] =
+const specs: Spec[] =
     runtimes.flatMap(runtime =>
     architectures.flatMap(architecture =>
     memorySizes.flatMap(memorySize =>
@@ -42,9 +42,10 @@ const executions: Spec[] =
 
 const invocationCount = 1;
 const arraySize = 2;
+let executionsCount = 0;
 
-const results = await Promise.all(executions.map(x => execute(x, invocationCount, arraySize)));
-const failures = executions.filter((_, index) => !results[index]);
+const results = await Promise.all(specs.map(x => execute(x, invocationCount, arraySize)));
+const failures = specs.filter((_, index) => !results[index]);
 
 if (failures.length > 0) {
     console.error(`\n[error] ${failures.length} function(s) failed:`);
@@ -59,12 +60,15 @@ export async function execute(spec: Spec, invokeCount: number, arraySize: number
     let success = true;
 
     for (let i = 0; i < invokeCount; i++) {
-        await forceNextColdStart(spec.runtime, spec.packageType, spec.architecture, spec.memorySize);
-
-        console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
+        await forceNextColdStart(functionName);
 
         const { input, expectedOutput } = generateInputAndExpectedOutput(arraySize);
         const response = await invokeFunction(functionName, JSON.stringify(input));
+        executionsCount += 1;
+
+        if (executionsCount % 10 === 0) {
+            console.log(`[execute] ${executionsCount}/${invokeCount * specs.length} executions`);
+        }
 
         if (!verifyNormalizedResponse(response, expectedOutput)) {
             console.error(`[error] Invalid response for function ${functionName}`);
@@ -77,7 +81,6 @@ export async function execute(spec: Spec, invokeCount: number, arraySize: number
 
     return success;
 }
-
 
 export async function createOrUpdateFunctionCode(spec: Spec): Promise<void> {
     const functionName = getFunctionName(spec.runtime, spec.packageType, spec.architecture, spec.memorySize);
@@ -135,7 +138,7 @@ export async function createOrUpdateFunctionCode(spec: Spec): Promise<void> {
         }
     }
 
-    console.log(`[success] Deployed ${functionName}`);
+    console.log(`[execute] Deployed ${functionName}`);
 }
 
 export async function waitForFunctionActive(functionName: string, maxRetries: number = 10, initialDelayMs: number = 4000, delayMs: number = 2000): Promise<void> {
@@ -171,9 +174,8 @@ export async function waitForFunctionActive(functionName: string, maxRetries: nu
     throw new Error(`Function ${functionName} did not become active within ${maxRetries * delayMs / 1000} seconds`);
 }
 
-export async function forceNextColdStart(runtime: string, packageType: PackageType, architecture: Architecture, memorySize: MemorySize): Promise<void> {
+export async function forceNextColdStart(functionName: string): Promise<void> {
 
-    const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
     const updateCommand = new UpdateFunctionConfigurationCommand({
         FunctionName: functionName,
         Environment: {

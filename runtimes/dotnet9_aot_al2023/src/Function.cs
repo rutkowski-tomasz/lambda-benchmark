@@ -1,6 +1,8 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.Lambda.APIGatewayEvents;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace LambdaBenchmark;
@@ -26,16 +28,18 @@ public class Function
 {
     private static async Task Main()
     {
-        Func<Input, ILambdaContext, Output> handler = FunctionHandler;
-        
+        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = FunctionHandler;
+
         await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
             .Build()
             .RunAsync();
     }
 
-    public static Output FunctionHandler(Input input, ILambdaContext context)
+    public static APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        if (input.Numbers.Length == 0)
+        var input = JsonSerializer.Deserialize(request.Body, LambdaFunctionJsonSerializerContext.Default.Input);
+
+        if (input!.Numbers.Length == 0)
         {
             throw new ArgumentException("Array cannot be empty");
         }
@@ -47,17 +51,23 @@ public class Function
             normalizedNumbers[i] = input.Numbers[i] - min;
         }
 
-        return new Output
+        return new APIGatewayProxyResponse
         {
-            InputNumbers = input.Numbers,
-            NormalizedNumbers = normalizedNumbers,
-            Min = min
+            StatusCode = 200,
+            Body = JsonSerializer.Serialize(new Output
+            {
+                InputNumbers = input.Numbers,
+                NormalizedNumbers = normalizedNumbers,
+                Min = min
+            }, LambdaFunctionJsonSerializerContext.Default.Output)
         };
     }
 }
 
 [JsonSerializable(typeof(Input))]
 [JsonSerializable(typeof(Output))]
+[JsonSerializable(typeof(APIGatewayProxyRequest))]
+[JsonSerializable(typeof(APIGatewayProxyResponse))]
 public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
 }

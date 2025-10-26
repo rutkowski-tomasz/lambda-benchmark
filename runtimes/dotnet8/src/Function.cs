@@ -1,4 +1,6 @@
 using Amazon.Lambda.Core;
+using Amazon.Lambda.APIGatewayEvents;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -24,9 +26,11 @@ public class Output
 
 public class Function
 {
-    public Output FunctionHandler(Input input, ILambdaContext context)
+    public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        if (input.Numbers.Length == 0)
+        var input = JsonSerializer.Deserialize<Input>(request.Body);
+
+        if (input!.Numbers.Length == 0)
         {
             throw new ArgumentException("Array cannot be empty");
         }
@@ -38,11 +42,15 @@ public class Function
             normalizedNumbers[i] = input.Numbers[i] - min;
         }
 
-        return new Output
+        return new APIGatewayProxyResponse
         {
-            InputNumbers = input.Numbers,
-            NormalizedNumbers = normalizedNumbers,
-            Min = min
+            StatusCode = 200,
+            Body = JsonSerializer.Serialize(new Output
+            {
+                InputNumbers = input.Numbers,
+                NormalizedNumbers = normalizedNumbers,
+                Min = min
+            })
         };
     }
 }

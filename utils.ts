@@ -150,16 +150,20 @@ export function verifyNormalizedResponse(output: Output, expectedOutput: Output)
 }
 
 export async function invokeFunction(functionName: string, payload: string): Promise<any> {
+    const apiGatewayRequest = {
+        body: payload
+    };
+
     const invokeCommand = new InvokeCommand({
         FunctionName: functionName,
         InvocationType: "RequestResponse",
-        Payload: new TextEncoder().encode(payload),
+        Payload: new TextEncoder().encode(JSON.stringify(apiGatewayRequest)),
     });
 
     const response = await lambdaClient.send(invokeCommand);
 
     const responsePayload = JSON.parse(new TextDecoder().decode(response.Payload));
-    return responsePayload;
+    return JSON.parse(responsePayload.body);
 }
 
 export async function deleteFunction(functionName: string): Promise<void> {

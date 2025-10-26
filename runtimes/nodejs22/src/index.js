@@ -1,5 +1,6 @@
 module.exports.handler = async (event) => {
-    const numbers = event.numbers;
+    const input = JSON.parse(event.body);
+    const numbers = input.numbers;
 
     if (numbers.length === 0) {
         throw new Error("Array cannot be empty");
@@ -12,8 +13,11 @@ module.exports.handler = async (event) => {
     }
 
     return {
-        inputNumbers: numbers,
-        normalizedNumbers: normalizedNumbers,
-        min: min
+        statusCode: 200,
+        body: JSON.stringify({
+            inputNumbers: numbers,
+            normalizedNumbers: normalizedNumbers,
+            min: min
+        })
     };
 };

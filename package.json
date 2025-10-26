@@ -7,7 +7,7 @@
   "scripts": {
     "execute": "pnpm tsx run execute",
     "analyze": "pnpm tsx run analyze",
-    "publish": "pnpm tsx run publish"
+    "package": "pnpm tsx run package"
   },
   "keywords": [],
   "author": "",

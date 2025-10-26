@@ -45,3 +45,5 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
 - Shell
 - Java
 - C++
+
+pnpm run publish dotnet9_aot_al2023 arm64

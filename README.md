@@ -30,17 +30,17 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
  
 # 🛣️ Roadmap
 
-1. Adjust FE to new contract
+1. Fix packageSizes
 1. Transform init.sh to OpenTofu
 1. Runtimes
-- Rust
-- Go
-- Nodejs (16, 18, 20)
-- Python (3.9, 3.10, 3.11, 3.12, 3.13)
-- Shell
-- Java
-- C++
-- dotnet6 (all), dotnet8 on AL2
+  - Rust
+  - Go
+  - Nodejs (16, 18, 20)
+  - Python (3.9, 3.10, 3.11, 3.12, 3.13)
+  - Shell
+  - Java
+  - C++
+  - dotnet6 (all), dotnet8 on AL2
 
 
 Todo instructions:

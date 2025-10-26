@@ -20,7 +20,7 @@ import {
   ChartContainer,
   ChartTooltip,
 } from "@/components/ui/chart";
-import type { Architecture, Benchmark, MemorySize } from "./types";
+import type { Architecture, ExecutionGroup, MemorySize } from "./types";
 
 const runtimeColors: Record<string, string> = {
   dotnet8: "hsl(var(--chart-1))",
@@ -78,22 +78,19 @@ const renderShape = (props: unknown) => {
 };
 
 export function PackageColdstartAnalysis({
-  benchmark,
+  executionGroups,
+  packageSizes,
 }: {
-  benchmark: Benchmark;
+  executionGroups: ExecutionGroup[];
+  packageSizes: Record<string, number>;
 }) {
-  const data = benchmark.analysis
+  const data = executionGroups
     .filter((a) => a.executions.length > 0)
     .map((analysis) => {
       const avgInitDuration =
         analysis.executions.reduce((acc, curr) => acc + curr.initDuration, 0) /
         analysis.executions.length;
-      const packageSize = benchmark.packageSizes.find(
-        (x) =>
-          x.runtime === analysis.runtime &&
-          x.architecture === analysis.architecture &&
-          x.packageType === analysis.packageType
-      )?.size;
+      const packageSize = packageSizes[`${analysis.runtime}-${analysis.packageType}-${analysis.architecture}`];
 
       return {
         x: (packageSize ?? 0) / (1024 * 1024),

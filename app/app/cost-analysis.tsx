@@ -23,7 +23,7 @@ import {
   ChartTooltip,
 } from "@/components/ui/chart";
 import { formatSize } from "@/lib/utils";
-import type { Architecture, Benchmark, MemorySize } from "./types";
+import type { Architecture, ExecutionGroup, MemorySize } from "./types";
 
 type DataPoint = {
   runtime: string;
@@ -82,7 +82,10 @@ const CustomShape = (props: {
   }
 };
 
-export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
+export function CostAnalysis({ executionGroups, packageSizes }: {
+  executionGroups: ExecutionGroup[],
+  packageSizes: Record<string, number>
+}) {
   const pricePerGbs: Record<Architecture, number> = {
     arm64: 0.0000133334,
     x86_64: 0.0000166667,
@@ -100,7 +103,7 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
   const architectureSet = new Set<Architecture>();
   const memorySizeSet = new Set<MemorySize>();
 
-  for (const analysis of benchmark.analysis) {
+  for (const analysis of executionGroups) {
     runtimeSet.add(analysis.runtime);
     architectureSet.add(analysis.architecture);
     memorySizeSet.add(analysis.memorySize);
@@ -114,12 +117,7 @@ export function CostAnalysis({ benchmark }: { benchmark: Benchmark }) {
     const avgMemoryUsed =
       analysis.executions.reduce((acc, curr) => acc + curr.memoryUsed, 0) /
       analysis.executions.length;
-    const packageSize = benchmark.packageSizes.find(
-      (x) =>
-        x.runtime === analysis.runtime &&
-        x.architecture === analysis.architecture &&
-        x.packageType === analysis.packageType
-    )?.size;
+    const packageSize = packageSizes[`${analysis.runtime}-${analysis.packageType}-${analysis.architecture}`];
 
     data.push({
       runtime: analysis.runtime,

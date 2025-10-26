@@ -4,11 +4,15 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { CostAnalysis } from "./cost-analysis";
 import { ExecutionPerformance } from "./execution-performance";
 import { PackageColdstartAnalysis } from "./package-coldstart-analysis";
-import type { Benchmark } from "./types";
+import type { ExecutionGroup } from "./types";
 
 export default function Home() {
-  const benchmark: Benchmark = JSON.parse(
+  const executionGroups: ExecutionGroup[] = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "../data/benchmark.json"), "utf8")
+  );
+
+  const packageSizes: Record<string, number> = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "../data/packageSizes.json"), "utf8")
   );
 
   return (
@@ -21,9 +25,9 @@ export default function Home() {
           <ThemeToggle />
         </div>
         <div className="space-y-6">
-          <ExecutionPerformance benchmark={benchmark} />
-          <PackageColdstartAnalysis benchmark={benchmark} />
-          <CostAnalysis benchmark={benchmark} />
+          <ExecutionPerformance executionGroups={executionGroups} />
+          <PackageColdstartAnalysis executionGroups={executionGroups} />
+          <CostAnalysis executionGroups={executionGroups} />
         </div>
       </div>
     </div>

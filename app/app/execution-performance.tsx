@@ -13,10 +13,10 @@ import {
   ChartTooltip,
 } from "@/components/ui/chart";
 import { formatSize } from "@/lib/utils";
-import type { Architecture, Benchmark, MemorySize } from "./types";
+import type { Architecture, ExecutionGroup, MemorySize } from "./types";
 
-export function ExecutionPerformance({ benchmark }: { benchmark: Benchmark }) {
-  const chartData = benchmark.analysis
+export function ExecutionPerformance({ executionGroups, packageSizes }: { executionGroups: ExecutionGroup[], packageSizes: Record<string, number> }) {
+  const chartData = executionGroups
     .map((analysis) => {
       const avgDuration =
         analysis.executions.reduce((acc, curr) => acc + curr.duration, 0) /
@@ -32,12 +32,7 @@ export function ExecutionPerformance({ benchmark }: { benchmark: Benchmark }) {
       const avgMemoryUsed =
         analysis.executions.reduce((acc, curr) => acc + curr.memoryUsed, 0) /
         analysis.executions.length;
-      const packageSize = benchmark.packageSizes.find(
-        (x) =>
-          x.runtime === analysis.runtime &&
-          x.architecture === analysis.architecture &&
-          x.packageType === analysis.packageType
-      )?.size;
+      const packageSize = packageSizes[`${analysis.runtime}-${analysis.packageType}-${analysis.architecture}`];
 
       return {
         configuration: `${analysis.runtime} ${analysis.architecture} ${analysis.memorySize}MB`,

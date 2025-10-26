@@ -25,9 +25,9 @@ export default function Home() {
           <ThemeToggle />
         </div>
         <div className="space-y-6">
-          <ExecutionPerformance executionGroups={executionGroups} />
-          <PackageColdstartAnalysis executionGroups={executionGroups} />
-          <CostAnalysis executionGroups={executionGroups} />
+          <ExecutionPerformance packageSizes={packageSizes} executionGroups={executionGroups} />
+          <PackageColdstartAnalysis packageSizes={packageSizes} executionGroups={executionGroups} />
+          <CostAnalysis packageSizes={packageSizes} executionGroups={executionGroups} />
         </div>
       </div>
     </div>

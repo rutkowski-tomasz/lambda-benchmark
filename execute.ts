@@ -1,7 +1,6 @@
-import fs from 'fs';
 import { type Architecture, type Spec, type MemorySize, type PackageType, type Input, type Output } from "./types.js";
 import { CreateFunctionCommand, DeleteFunctionCommand, GetFunctionCommand, InvokeCommand, LambdaClient, UpdateFunctionCodeCommand, UpdateFunctionConfigurationCommand } from '@aws-sdk/client-lambda';
-import { getAwsConfig } from './utils.js';
+import { getAwsConfig, getConfig } from './utils.js';
 
 const lambdaClient = new LambdaClient({});
 const { accountId, region } = await getAwsConfig();
@@ -49,12 +48,12 @@ const failures = specs.filter((_, index) => !results[index]);
 
 if (failures.length > 0) {
     console.error(`\n[error] ${failures.length} function(s) failed:`);
-    failures.forEach(f => console.error(`  - ${getFunctionName(f.runtime, f.packageType, f.architecture, f.memorySize)}`));
+    failures.forEach(f => console.error(`  - ${f.runtime} ${f.packageType} ${f.architecture} ${f.memorySize}`));
     process.exit(1);
 }
 
 export async function execute(spec: Spec, invokeCount: number, arraySize: number): Promise<boolean> {
-    const functionName = getFunctionName(spec.runtime, spec.packageType, spec.architecture, spec.memorySize);
+    const functionName = getFunctionName(spec);
     await createOrUpdateFunctionCode(spec);
 
     let success = true;
@@ -82,9 +81,9 @@ export async function execute(spec: Spec, invokeCount: number, arraySize: number
     return success;
 }
 
-export async function createOrUpdateFunctionCode(spec: Spec): Promise<void> {
-    const functionName = getFunctionName(spec.runtime, spec.packageType, spec.architecture, spec.memorySize);
-    const config = JSON.parse(fs.readFileSync(`runtimes/${spec.runtime}/config.json`, 'utf8'));
+async function createOrUpdateFunctionCode(spec: Spec): Promise<void> {
+    const functionName = getFunctionName(spec);
+    const config = await getConfig(spec.runtime);
     
     try {
         const createCommandInput: any = {
@@ -141,7 +140,7 @@ export async function createOrUpdateFunctionCode(spec: Spec): Promise<void> {
     console.log(`[execute] Deployed ${functionName}`);
 }
 
-export async function waitForFunctionActive(functionName: string, maxRetries: number = 10, initialDelayMs: number = 4000, delayMs: number = 2000): Promise<void> {
+async function waitForFunctionActive(functionName: string, maxRetries: number = 10, initialDelayMs: number = 4000, delayMs: number = 2000): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, initialDelayMs));
 
     for (let i = 0; i < maxRetries; i++) {
@@ -174,7 +173,7 @@ export async function waitForFunctionActive(functionName: string, maxRetries: nu
     throw new Error(`Function ${functionName} did not become active within ${maxRetries * delayMs / 1000} seconds`);
 }
 
-export async function forceNextColdStart(functionName: string): Promise<void> {
+async function forceNextColdStart(functionName: string): Promise<void> {
 
     const updateCommand = new UpdateFunctionConfigurationCommand({
         FunctionName: functionName,
@@ -190,7 +189,7 @@ export async function forceNextColdStart(functionName: string): Promise<void> {
     await waitForFunctionActive(functionName);
 }
 
-export function generateInputAndExpectedOutput(arraySize: number): { input: Input, expectedOutput: Output } {
+function generateInputAndExpectedOutput(arraySize: number): { input: Input, expectedOutput: Output } {
     const numbers: number[] = [];
     for (let i = 0; i < arraySize; i++) {
         numbers.push(Math.floor(Math.random() * 1_000) + 1);
@@ -201,7 +200,7 @@ export function generateInputAndExpectedOutput(arraySize: number): { input: Inpu
     return { input: { numbers }, expectedOutput: { inputNumbers: numbers, normalizedNumbers: normalized, min } };
 }
 
-export function verifyNormalizedResponse(output: Output, expectedOutput: Output): boolean {
+function verifyNormalizedResponse(output: Output, expectedOutput: Output): boolean {
     return output.min === expectedOutput.min
         && expectedOutput.inputNumbers.length === output.inputNumbers.length
         && expectedOutput.normalizedNumbers.length === output.normalizedNumbers.length
@@ -209,7 +208,7 @@ export function verifyNormalizedResponse(output: Output, expectedOutput: Output)
         && output.normalizedNumbers.every((x, i) => x === expectedOutput.normalizedNumbers[i])
 }
 
-export async function invokeFunction(functionName: string, payload: string): Promise<any> {
+async function invokeFunction(functionName: string, payload: string): Promise<any> {
     const apiGatewayRequest = {
         body: payload,
         httpMethod: 'POST',
@@ -271,7 +270,7 @@ export async function invokeFunction(functionName: string, payload: string): Pro
     return JSON.parse(responsePayload.body);
 }
 
-export async function deleteFunction(functionName: string): Promise<void> {
+async function deleteFunction(functionName: string): Promise<void> {
     const deleteCommand = new DeleteFunctionCommand({
         FunctionName: functionName,
     });
@@ -279,6 +278,6 @@ export async function deleteFunction(functionName: string): Promise<void> {
     await lambdaClient.send(deleteCommand);
 }
 
-export function getFunctionName(runtime: string, packageType: PackageType, architecture: Architecture, memorySize: MemorySize): string {
-    return `${runtime}-${packageType}-${architecture}-${memorySize}`;
+function getFunctionName(spec: Spec): string {
+    return `${spec.runtime}-${spec.packageType}-${spec.architecture}-${spec.memorySize}`;
 }

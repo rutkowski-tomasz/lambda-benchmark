@@ -40,3 +40,9 @@ export type Output = {
     normalizedNumbers: number[];
     min: number;
 }
+
+export type Config = {
+    runtime: string;
+    handler: string;
+    baseImage: string;
+}

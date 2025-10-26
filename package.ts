@@ -2,46 +2,46 @@ import fs from 'fs';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { type Architecture } from "./types.js";
 import { execSync } from 'child_process';
-import { getAwsConfig } from './utils.js';
-
-const { accountId, region } = await getAwsConfig();
-const s3Bucket = "lambda-benchmark-packages";
-const registryUrl = `${accountId}.dkr.ecr.${region}.amazonaws.com`;
+import { getAwsConfig, getConfig } from './utils.js';
 
 const s3Client = new S3Client();
+const { region, s3Bucket, registryUrl } = await getAwsConfig();
 
 const runtime = process.argv[2] as string;
 const architecture = process.argv[3] as Architecture;
+await main(runtime, architecture);
 
-console.log(`[package] Packing ZIP package`);
-const zipPackage = await pack(runtime, architecture);
+async function main(runtime: string, architecture: Architecture) {
+    console.log(`[package] Packing ZIP package`);
+    const zipPackage = await createZipPackage(runtime, architecture);
 
-console.log(`[package] Uploading ${zipPackage.path} to S3`);
-await uploadToS3(zipPackage.path);
+    console.log(`[package] Uploading ${zipPackage.path} to S3`);
+    await uploadToS3(zipPackage.path);
 
-console.log(`[package] Creating docker image`);
-const image = await createAndPushImage(runtime, architecture);
+    console.log(`[package] Creating docker image`);
+    const image = await createAndPushImage(zipPackage.path, runtime, architecture);
 
-console.log(`[package] Logging in to ECR`);
-execSync(`aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registryUrl}`);
+    console.log(`[package] Logging in to ECR`);
+    execSync(`aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registryUrl}`);
 
-console.log(`[package] Pushing ${image.tag} to ECR`);
-execSync(`docker push ${image.tag}`);
+    console.log(`[package] Pushing ${image.tag} to ECR`);
+    execSync(`docker push ${image.tag}`);
 
-if (process.env.GITHUB_OUTPUT) {
-    console.log(`[package] Writing result to GitHub output`);
-    const result = {
-        runtime,
-        architecture,
-        zipSize: zipPackage.size,
-        imageSize: image.size
-    };
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `result=${JSON.stringify(result)}\n`);
+    if (process.env.GITHUB_OUTPUT) {
+        console.log(`[package] Writing result to GitHub output`);
+        const result = {
+            runtime,
+            architecture,
+            zipSize: zipPackage.size,
+            imageSize: image.size
+        };
+        fs.appendFileSync(process.env.GITHUB_OUTPUT, `result=${JSON.stringify(result)}\n`);
+    }
+
+    console.log(`[success] package size: ${formatSize(zipPackage.size)}, image size: ${formatSize(image.size)}`);
 }
 
-console.log(`[success] package size: ${formatSize(zipPackage.size)}, image size: ${formatSize(image.size)}`);
-
-export async function pack(runtime: string, architecture: Architecture): Promise<{ path: string, size: number }> {
+async function createZipPackage(runtime: string, architecture: Architecture): Promise<{ path: string, size: number }> {
 
     const path = `runtimes/${runtime}/function_${architecture}.zip`;
     if (fs.existsSync(path)) {
@@ -58,7 +58,7 @@ export async function pack(runtime: string, architecture: Architecture): Promise
     return { path, size: fs.statSync(path).size };
 }
 
-export async function uploadToS3(path: string): Promise<void> {
+async function uploadToS3(path: string): Promise<void> {
 
     const zipContent = fs.readFileSync(path);
 
@@ -76,16 +76,16 @@ export async function uploadToS3(path: string): Promise<void> {
     }));
 }
 
-export async function createAndPushImage(runtime: string, architecture: Architecture): Promise<{ tag: string, size: number }> {
-    const config = JSON.parse(fs.readFileSync(`runtimes/${runtime}/config.json`, 'utf8'));
+async function createAndPushImage(zipPackagePath: string, runtime: string, architecture: Architecture): Promise<{ tag: string, size: number }> {
+    const config = await getConfig(runtime);
     const platform = architecture === 'arm64' ? 'linux/arm64' : 'linux/amd64';
-    const extractPath = `runtimes/${runtime}/function_${architecture}`;
+    const extractPath = zipPackagePath.slice(0, -4);
 
     if (fs.existsSync(extractPath)) {
         fs.rmSync(extractPath, { recursive: true, force: true });
     }
     
-    execSync(`unzip runtimes/${runtime}/function_${architecture}.zip -d ${extractPath}`);
+    execSync(`unzip ${zipPackagePath} -d ${extractPath}`);
 
     const tag = `${registryUrl}/lambda-benchmark:${runtime}-${architecture}`;
     const buildCommand = `docker build --platform ${platform} runtimes/${runtime} -f Dockerfile.custom_image --build-arg BASE_IMAGE=${config.baseImage} --build-arg HANDLER=${config.handler} --build-arg ARCHITECTURE=${architecture} -t ${tag}`;
@@ -94,7 +94,7 @@ export async function createAndPushImage(runtime: string, architecture: Architec
     return { tag, size: parseInt(execSync(`docker inspect -f '{{ .Size }}' ${tag}`, { encoding: 'utf-8' }).trim()) };
 }
 
-export function formatSize(bytes: number): string {
+function formatSize(bytes: number): string {
     if (bytes === 0) {
         return '0 bytes';
     }

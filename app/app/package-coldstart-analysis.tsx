@@ -23,11 +23,11 @@ import {
 import type { Architecture, ExecutionGroup, MemorySize } from "./types";
 
 const runtimeColors: Record<string, string> = {
-  dotnet8: "hsl(var(--chart-1))",
-  dotnet8_aot_al2023: "hsl(var(--chart-2))",
-  dotnet9_aot_al2023: "hsl(var(--chart-3))",
-  llrt: "hsl(var(--chart-4))",
-  nodejs22: "hsl(var(--chart-5))",
+  dotnet8: "var(--chart-1)",
+  dotnet8_aot_al2023: "var(--chart-2)",
+  dotnet9_aot_al2023: "var(--chart-3)",
+  llrt: "var(--chart-4)",
+  nodejs22: "var(--chart-5)",
 };
 
 type DataPoint = {
@@ -90,7 +90,7 @@ export function PackageColdstartAnalysis({
       const avgInitDuration =
         analysis.executions.reduce((acc, curr) => acc + curr.initDuration, 0) /
         analysis.executions.length;
-      const packageSize = packageSizes[`${analysis.runtime}-${analysis.packageType}-${analysis.architecture}`];
+      const packageSize = packageSizes[`${analysis.runtime}_${analysis.packageType}_${analysis.architecture}`];
 
       return {
         x: (packageSize ?? 0) / (1024 * 1024),

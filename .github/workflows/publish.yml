@@ -1,0 +1,108 @@
+name: Publish ZIP packages and images
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changed-runtimes: ${{ steps.changes.outputs.runtimes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: changes
+        name: Detect changed runtimes
+        run: |
+          changed=$(git diff --name-only HEAD~1 | grep '^runtimes/' | cut -d'/' -f2 | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          echo "runtimes=${changed}" >> $GITHUB_OUTPUT
+
+  publish:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.changed-runtimes != '[]'
+    strategy:
+      matrix:
+        runtime: ${{fromJson(needs.detect-changes.outputs.changed-runtimes)}}
+        architecture: [arm64, x86_64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish ZIP package and image
+        run: pnpm run publish ${{ matrix.runtime }} ${{ matrix.architecture }}
+
+  aggregate:
+    needs: [detect-changes, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Aggregate package sizes
+        run: |
+          if [ -f data/packageSizes.json ]; then
+            cp data/packageSizes.json /tmp/existing.json
+          else
+            echo '{"packageSizes":[]}' > /tmp/existing.json
+          fi
+          
+          cat > /tmp/new-sizes.json << 'EOF'
+          ${{ toJson(needs.publish.outputs) }}
+          EOF
+          
+          jq -n '
+            (input | .packageSizes) as $existing |
+            (input | to_entries | map(select(.key | startswith("result-")) | .value | fromjson)) as $new |
+            ($new | map("\(.runtime)-\(.architecture)")) as $changed_keys |
+            {
+              packageSizes: (
+                ($existing | map(select("\(.runtime)-\(.architecture)" | IN($changed_keys[]) | not))) +
+                ($new | map(
+                  {runtime, architecture, packageType: "zip", size: .zipSize},
+                  {runtime, architecture, packageType: "image", size: .imageSize}
+                ))
+              )
+            }
+          ' /tmp/existing.json /tmp/new-sizes.json > data/packageSizes.json
+      
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/packageSizes.json
+          git diff --staged --quiet || git commit -m "Update package sizes [skip ci]"
+          git push

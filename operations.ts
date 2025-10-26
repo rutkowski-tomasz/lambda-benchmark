@@ -13,11 +13,11 @@ import {
     generateInputAndExpectedOutput,
     verifyNormalizedResponse
 } from './utils.js';
-import { type Analysis, type Architecture, type Build, type Execute, type PackageType } from './types.js';
+import { type Analysis, type Architecture, type PublishConfiguration, type Execute, type PackageType } from './types.js';
 
 const execAsync = promisify(exec);
 
-export async function pack(build: Build): Promise<{ runtime: string, architecture: Architecture, packageType: PackageType, size: number }> {
+export async function pack(build: PublishConfiguration): Promise<{ runtime: string, architecture: Architecture, packageType: PackageType, size: number }> {
 
     const packPath = getPackPath(build.runtime, build.architecture);
     if (fs.existsSync(packPath)) {
@@ -49,7 +49,7 @@ export async function pack(build: Build): Promise<{ runtime: string, architectur
     return { runtime: build.runtime, architecture: build.architecture, packageType: 'zip', size };
 }
 
-export async function createCustomImage(build: Build, registryUrl: string): Promise<{ runtime: string, architecture: Architecture, packageType: PackageType, size: number }> {
+export async function createCustomImage(build: PublishConfiguration, registryUrl: string): Promise<{ runtime: string, architecture: Architecture, packageType: PackageType, size: number }> {
     const configFile = fs.readFileSync(`runtimes/${build.runtime}/config.json`, 'utf8');
     const config = JSON.parse(configFile);
     const platform = build.architecture === 'arm64' ? 'linux/arm64' : 'linux/amd64';

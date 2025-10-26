@@ -1,5 +1,5 @@
 using Amazon.Lambda.Core;
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
@@ -7,46 +7,42 @@ namespace LambdaBenchmark;
 
 public class Input
 {
-    public int[] numbers { get; set; } = Array.Empty<int>();
+    public int[] Numbers { get; set; } = [];
 }
 
 public class Output
 {
-    public int[] numbers { get; set; } = Array.Empty<int>();
-    public int min { get; set; }
+    [JsonPropertyName("inputNumbers")]
+    public int[] InputNumbers { get; set; } = [];
+
+    [JsonPropertyName("normalizedNumbers")]
+    public int[] NormalizedNumbers { get; set; } = [];
+
+    [JsonPropertyName("min")]
+    public int Min { get; set; }
 }
 
 public class Function
 {
-    public string FunctionHandler(string json, ILambdaContext context)
+    public Output FunctionHandler(Input input, ILambdaContext context)
     {
-        var input = JsonSerializer.Deserialize<Input>(json);
-        var numbers = input!.numbers;
-
-        if (numbers.Length == 0)
+        if (input.Numbers.Length == 0)
         {
             throw new ArgumentException("Array cannot be empty");
         }
 
-        var min = numbers[0];
-        for (var i = 1; i < numbers.Length; i++)
+        var min = input.Numbers.Min();
+        var normalizedNumbers = new int[input.Numbers.Length];
+        for (var i = 0; i < input.Numbers.Length; i++)
         {
-            if (numbers[i] < min)
-                min = numbers[i];
+            normalizedNumbers[i] = input.Numbers[i] - min;
         }
 
-        var normalized = new int[numbers.Length];
-        for (var i = 0; i < numbers.Length; i++)
+        return new Output
         {
-            normalized[i] = numbers[i] - min;
-        }
-
-        var output = new Output
-        {
-            numbers = normalized,
-            min = min
+            InputNumbers = input.Numbers,
+            NormalizedNumbers = normalizedNumbers,
+            Min = min
         };
-
-        return JsonSerializer.Serialize(output);
     }
 }

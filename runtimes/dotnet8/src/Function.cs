@@ -14,21 +14,21 @@ public class Input
 
 public class Output
 {
-    [JsonPropertyName("inputNumbers")]
     public int[] InputNumbers { get; set; } = [];
-
-    [JsonPropertyName("normalizedNumbers")]
     public int[] NormalizedNumbers { get; set; } = [];
-
-    [JsonPropertyName("min")]
     public int Min { get; set; }
 }
 
 public class Function
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        var input = JsonSerializer.Deserialize<Input>(request.Body);
+        var input = JsonSerializer.Deserialize<Input>(request.Body, JsonOptions);
 
         if (input!.Numbers.Length == 0)
         {
@@ -50,7 +50,7 @@ public class Function
                 InputNumbers = input.Numbers,
                 NormalizedNumbers = normalizedNumbers,
                 Min = min
-            })
+            }, JsonOptions)
         };
     }
 }

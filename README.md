@@ -31,7 +31,6 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
 # 🛣️ Roadmap
 
 1. Fix packageSizes
-1. Transform init.sh to OpenTofu
 1. Runtimes
   - Rust
   - Go

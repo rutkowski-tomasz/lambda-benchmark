@@ -36,6 +36,7 @@ async function main(runtime: string, architecture: Architecture) {
             imageSize: image.size
         };
         fs.appendFileSync(process.env.GITHUB_OUTPUT, `result=${JSON.stringify(result)}\n`);
+        fs.writeFileSync('result.json', JSON.stringify(result));
     }
 
     console.log(`[success] package size: ${formatSize(zipPackage.size)}, image size: ${formatSize(image.size)}`);

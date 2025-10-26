@@ -21,7 +21,7 @@ jobs:
           changed=$(git diff --name-only HEAD~1 | grep '^runtimes/' | cut -d'/' -f2 | sort -u | jq -R -s -c 'split("\n")[:-1]')
           echo "runtimes=${changed}" >> $GITHUB_OUTPUT
 
-  publish:
+  package:
     needs: detect-changes
     if: needs.detect-changes.outputs.changed-runtimes != '[]'
     strategy:
@@ -59,11 +59,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Publish ZIP package and image
-        run: pnpm run publish ${{ matrix.runtime }} ${{ matrix.architecture }}
+      - name: Create ZIP and image artifacts
+        id: package
+        run: pnpm run package ${{ matrix.runtime }} ${{ matrix.architecture }}
+
+      - name: Upload result artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-${{ matrix.runtime }}-${{ matrix.architecture }}
+          path: result.json
+          retention-days: 1
 
   aggregate:
-    needs: [detect-changes, publish]
+    needs: [detect-changes, package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -72,35 +80,40 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: result-*
+          path: results
+
       - name: Aggregate package sizes
         run: |
-          if [ -f data/packageSizes.json ]; then
-            cp data/packageSizes.json /tmp/existing.json
-          else
-            echo '{"packageSizes":[]}' > /tmp/existing.json
-          fi
+          node <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
           
-          cat > /tmp/new-sizes.json << 'EOF'
-          ${{ toJson(needs.publish.outputs) }}
+          let existing = JSON.parse(fs.readFileSync('data/packageSizes.json', 'utf8'));
+          
+          const resultsDir = 'results';
+          const resultFiles = fs.readdirSync(resultsDir, { recursive: true })
+            .filter(f => f.endsWith('result.json'));
+          
+          for (const file of resultFiles) {
+            const data = JSON.parse(fs.readFileSync(path.join(resultsDir, file), 'utf8'));
+            console.log('Processing:', data);
+            
+            const zipKey = `${data.runtime}_zip_${data.architecture}`;
+            const imageKey = `${data.runtime}_image_${data.architecture}`;
+            
+            existing[zipKey] = data.zipSize;
+            existing[imageKey] = data.imageSize;
+          }
+          
+          console.log('Final data:', JSON.stringify(existing, null, 2));
+          fs.writeFileSync('data/packageSizes.json', JSON.stringify(existing, null, 2));
           EOF
-          
-          jq -n '
-            (input | .packageSizes) as $existing |
-            (input | to_entries | map(select(.key | startswith("result-")) | .value | fromjson)) as $new |
-            ($new | map("\(.runtime)-\(.architecture)")) as $changed_keys |
-            {
-              packageSizes: (
-                ($existing | map(select("\(.runtime)-\(.architecture)" | IN($changed_keys[]) | not))) +
-                ($new | map(
-                  {runtime, architecture, packageType: "zip", size: .zipSize},
-                  {runtime, architecture, packageType: "image", size: .imageSize}
-                ))
-              )
-            }
-          ' /tmp/existing.json /tmp/new-sizes.json > data/packageSizes.json
       
-      - name: Commit changes
-        run: |
+      - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/packageSizes.json

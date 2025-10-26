@@ -25,7 +25,7 @@ To setup prerequisites `./init.sh`
   1. Update configuration to force cold start
   1. Invoke
 
-## 🔎 analysis.js
+## 🔎 collect.js
 Query CloudWatch REPORT logs for each function to extract cold start and execution times data.
  
 # 🛣️ Roadmap
@@ -44,5 +44,5 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
 
 
 Todo instructions:
-pnpm run publish dotnet9_aot_al2023 arm64
+pnpm run package dotnet9_aot_al2023 arm64
 conventions for runtimes

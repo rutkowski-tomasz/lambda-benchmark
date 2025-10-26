@@ -9,31 +9,26 @@ export type Architecture = 'arm64' | 'x86_64';
 export type PackageType = 'zip' | 'image';
 export type MemorySize = 128 | 256 | 512 | 1024;
 
-export type Analysis = {
+export type ExecutionGroup = {
     runtime: string;
     packageType: PackageType;
     architecture: Architecture;
     memorySize: MemorySize;
-    executions: any[];
+    executions: Execution[];
 };
+
+export type Execution = {
+    initDuration: number;
+    duration: number;
+    billedDuration: number;
+    memoryUsed: number;
+}
 
 export type PackageSize = {
     runtime: string;
     architecture: Architecture;
     packageType: PackageType;
     size: number;
-}
-
-export type ExecutionData = {
-    initDuration: number;
-    duration: number;
-    billedDuration: number;
-    memoryUsed: number;
-    functionName: string;
-    runtime: string;
-    packageType: PackageType;
-    architecture: Architecture;
-    memorySize: MemorySize;
 }
 
 export type Input = {

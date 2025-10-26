@@ -5,9 +5,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "package": "pnpm tsx package",
     "execute": "pnpm tsx execute",
-    "analyze": "pnpm tsx analyze",
-    "publish": "pnpm tsx publish"
+    "collect": "pnpm tsx collect"
   },
   "keywords": [],
   "author": "",

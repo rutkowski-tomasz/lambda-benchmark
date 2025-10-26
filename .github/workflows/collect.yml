@@ -1,11 +1,11 @@
-name: Weekly Analyze
+name: Weekly Colelct
 on:
   schedule:
     - cron: '30 9 * * 1'  # 9:30 AM UTC every Monday
   workflow_dispatch:
 
 jobs:
-  analyze:
+  collect:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,8 +28,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Analyze
-        run: pnpm run analyze
+      - name: Collect
+        run: pnpm run collect
 
       - name: Commit changes
         run: |

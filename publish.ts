@@ -13,23 +13,23 @@ const s3Client = new S3Client();
 const runtime = process.argv[2] as string;
 const architecture = process.argv[3] as Architecture;
 
-console.log(`[publish] Packing ZIP package`);
+console.log(`[package] Packing ZIP package`);
 const zipPackage = await pack(runtime, architecture);
 
-console.log(`[publish] Uploading ${zipPackage.path} to S3`);
+console.log(`[package] Uploading ${zipPackage.path} to S3`);
 await uploadToS3(zipPackage.path);
 
-console.log(`[publish] Creating docker image`);
+console.log(`[package] Creating docker image`);
 const image = await createAndPushImage(runtime, architecture);
 
-console.log(`[publish] Logging in to ECR`);
+console.log(`[package] Logging in to ECR`);
 execSync(`aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registryUrl}`);
 
-console.log(`[publish] Pushing ${image.tag} to ECR`);
+console.log(`[package] Pushing ${image.tag} to ECR`);
 execSync(`docker push ${image.tag}`);
 
 if (process.env.GITHUB_OUTPUT) {
-    console.log(`[publish] Writing result to GitHub output`);
+    console.log(`[package] Writing result to GitHub output`);
     const result = {
         runtime,
         architecture,

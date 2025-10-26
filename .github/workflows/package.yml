@@ -1,4 +1,4 @@
-name: Publish ZIP packages and images
+name: Package and Push Artifacts
 on:
   push:
     branches:

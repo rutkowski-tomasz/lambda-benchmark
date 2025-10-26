@@ -1,3 +1,23 @@
 {
-  "packageSizes": []
+  "packageSizes": [],
+  "dotnet8_zip_arm64": 60725,
+  "dotnet8_image_arm64": 373871040,
+  "dotnet8_zip_x86_64": 60720,
+  "dotnet8_image_x86_64": 344322412,
+  "dotnet8_aot_al2023_zip_arm64": 8539017,
+  "dotnet8_aot_al2023_image_arm64": 158377594,
+  "dotnet8_aot_al2023_zip_x86_64": 8824964,
+  "dotnet8_aot_al2023_image_x86_64": 137249630,
+  "dotnet9_aot_al2023_zip_arm64": 8679427,
+  "dotnet9_aot_al2023_image_arm64": 156544986,
+  "dotnet9_aot_al2023_zip_x86_64": 9166268,
+  "dotnet9_aot_al2023_image_x86_64": 135841054,
+  "llrt_zip_arm64": 4689836,
+  "llrt_image_arm64": 137587768,
+  "llrt_zip_x86_64": 4995038,
+  "llrt_image_x86_64": 117598620,
+  "nodejs22_zip_arm64": 459,
+  "nodejs22_image_arm64": 434810821,
+  "nodejs22_zip_x86_64": 459,
+  "nodejs22_image_x86_64": 412288730
 }

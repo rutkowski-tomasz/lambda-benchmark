@@ -88,7 +88,7 @@ async function createOrUpdateFunctionCode(spec: Spec): Promise<void> {
     try {
         const createCommandInput: any = {
             FunctionName: functionName,
-            Role: `arn:aws:iam::${accountId}:role/lambda-exec-role`,
+            Role: `arn:aws:iam::${accountId}:role/lambda-benchmark-exec-role`,
             Architectures: [spec.architecture],
             MemorySize: spec.memorySize,
         };

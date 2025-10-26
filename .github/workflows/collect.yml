@@ -1,4 +1,4 @@
-name: Weekly Colelct
+name: Weekly Collect
 on:
   schedule:
     - cron: '30 9 * * 1'  # 9:30 AM UTC every Monday

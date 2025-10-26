@@ -145,8 +145,54 @@ export function verifyNormalizedResponse(output: Output, expectedOutput: Output)
 
 export async function invokeFunction(functionName: string, payload: string): Promise<any> {
     const apiGatewayRequest = {
-        body: payload
+        body: payload,
+        httpMethod: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        multiValueHeaders: null,
+        isBase64Encoded: false,
+        path: '/invoke',
+        pathParameters: null,
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {
+            accountId: '123456789012',
+            apiId: 'api-id',
+            protocol: 'HTTP/1.1',
+            httpMethod: 'POST',
+            path: '/invoke',
+            stage: 'prod',
+            requestId: 'request-id',
+            requestTime: new Date().toISOString(),
+            requestTimeEpoch: Date.now(),
+            identity: {
+                cognitoIdentityPoolId: null,
+                accountId: null,
+                cognitoIdentityId: null,
+                caller: null,
+                sourceIp: '127.0.0.1',
+                principalOrgId: null,
+                accessKey: null,
+                cognitoAuthenticationType: null,
+                cognitoAuthenticationProvider: null,
+                userArn: null,
+                userAgent: 'Custom User Agent',
+                user: null,
+                apiKey: null,
+                apiKeyId: null,
+                clientCert: null
+            },
+            authorizer: null,
+            domainName: 'api.example.com',
+            domainPrefix: 'api',
+            resourceId: 'resource-id',
+            resourcePath: '/invoke'
+        },
+        resource: '/invoke'
     };
+
 
     const invokeCommand = new InvokeCommand({
         FunctionName: functionName,

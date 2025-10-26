@@ -10,8 +10,7 @@ import {
     invokeFunction,
     deleteFunction,
     queryCloudWatchLogs,
-    generateTestNumbers,
-    serializeInput,
+    generateInputAndExpectedOutput,
     verifyNormalizedResponse
 } from './utils.js';
 import { type Analysis, type Architecture, type Build, type Execute, type PackageType } from './types.js';
@@ -96,11 +95,10 @@ export async function execute(execute: Execute, invokeCount: number, arraySize: 
 
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
 
-        const inputNumbers = generateTestNumbers(arraySize);
-        const inputPayload = serializeInput(inputNumbers);
-        const response = await invokeFunction(functionName, inputPayload);
+        const { input, expectedOutput } = generateInputAndExpectedOutput(arraySize);
+        const response = await invokeFunction(functionName, JSON.stringify(input));
 
-        if (!verifyNormalizedResponse(inputNumbers, response)) {
+        if (!verifyNormalizedResponse(response, expectedOutput)) {
             console.error(`[error] Invalid response for function ${functionName}`);
             success = false;
             continue;

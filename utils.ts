@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { LambdaClient, UpdateFunctionCodeCommand, CreateFunctionCommand, DeleteFunctionCommand, InvokeCommand, GetFunctionCommand, UpdateFunctionConfigurationCommand } from "@aws-sdk/client-lambda";
 import { CloudWatchLogsClient, StartQueryCommand, GetQueryResultsCommand } from "@aws-sdk/client-cloudwatch-logs";
-import { type Architecture, type PackageType, type MemorySize, type ExecutionData } from './types.js';
+import { type Architecture, type PackageType, type MemorySize, type ExecutionData, type Input, type Output } from './types.js';
 
 const ACCOUNT_ID = "024853653660";
 const REGION = "eu-central-1";
@@ -121,68 +121,39 @@ export async function updateFunctionConfiguration(runtime: string, packageType: 
     await waitForFunctionActive(functionName);
 }
 
-export interface Input {
-    numbers: number[];
-}
-
-export interface Output {
-    numbers: number[];
-    min: number;
-}
-
-export function generateTestNumbers(arraySize: number): number[] {
+export function generateInputAndExpectedOutput(arraySize: number): { input: Input, expectedOutput: Output } {
     const numbers: number[] = [];
     for (let i = 0; i < arraySize; i++) {
-        numbers.push(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + 1);
+        numbers.push(Math.floor(Math.random() * 1_000) + 1);
     }
-    return numbers;
+
+    const min = Math.min(...numbers);
+    const normalized = numbers.map(x => x - min);
+    return { input: { numbers }, expectedOutput: { inputNumbers: numbers, normalizedNumbers: normalized, min } };
 }
 
-export function serializeInput(numbers: number[]): string {
-    const input: Input = { numbers };
-    return JSON.stringify(input);
-}
-
-export function verifyNormalizedResponse(inputNumbers: number[], outputJson: string): boolean {
+export function verifyNormalizedResponse(output: Output, expectedOutput: Output): boolean {
     try {
-        const output: Output = JSON.parse(outputJson);
+        // console.log('expectedOutput', expectedOutput);
+        // console.log('output', output);
 
-        if (inputNumbers.length !== output.numbers.length) {
-            return false;
-        }
+        return output.min === expectedOutput.min
+            && expectedOutput.inputNumbers.length === output.inputNumbers.length
+            && expectedOutput.normalizedNumbers.length === output.normalizedNumbers.length
+            && output.inputNumbers.every((x, i) => x === expectedOutput.inputNumbers[i])
+            && output.normalizedNumbers.every((x, i) => x === expectedOutput.normalizedNumbers[i])
 
-        if (inputNumbers.length === 0) {
-            return false;
-        }
-
-        let min = inputNumbers[0];
-        for (let i = 1; i < inputNumbers.length; i++) {
-            if (inputNumbers[i] < min) {
-                min = inputNumbers[i];
-            }
-        }
-
-        if (output.min !== min) {
-            return false;
-        }
-
-        for (let i = 0; i < inputNumbers.length; i++) {
-            if (output.numbers[i] !== inputNumbers[i] - min) {
-                return false;
-            }
-        }
-
-        return true;
     } catch (error) {
+        console.error('error', error);
         return false;
     }
 }
 
-export async function invokeFunction(functionName: string, payload?: string): Promise<any> {
+export async function invokeFunction(functionName: string, payload: string): Promise<any> {
     const invokeCommand = new InvokeCommand({
         FunctionName: functionName,
         InvocationType: "RequestResponse",
-        Payload: payload ? new TextEncoder().encode(payload) : undefined
+        Payload: new TextEncoder().encode(payload),
     });
 
     const response = await lambdaClient.send(invokeCommand);

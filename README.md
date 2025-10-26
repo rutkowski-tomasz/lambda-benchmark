@@ -4,6 +4,8 @@ Work in progress
 
 # 📊 lambda-benchmark
 
+Weekly benchmarks to drive your AWS Lambda decisions
+
 Motivation:
 Up to date benchmark results
 Analyzing cold start and execution times

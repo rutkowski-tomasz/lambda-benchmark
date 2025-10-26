@@ -1,8 +1,3 @@
-export type PublishConfiguration = {
-    runtime: string;
-    architecture: Architecture;
-};
-
 export type Execute = {
     runtime: string;
     architecture: Architecture;
@@ -22,11 +17,6 @@ export type Analysis = {
     executions: any[];
 };
 
-export type Benchmark = {
-    packageSizes: PackageSize[];
-    analysis: Analysis[];
-}
-
 export type PackageSize = {
     runtime: string;
     architecture: Architecture;
@@ -39,6 +29,11 @@ export type ExecutionData = {
     duration: number;
     billedDuration: number;
     memoryUsed: number;
+    functionName: string;
+    runtime: string;
+    packageType: PackageType;
+    architecture: Architecture;
+    memorySize: MemorySize;
 }
 
 export type Input = {

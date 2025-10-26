@@ -5,8 +5,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "execute": "pnpm tsx run execute",
-    "analyze": "pnpm tsx run analyze",
+    "execute": "pnpm tsx execute",
+    "analyze": "pnpm tsx analyze",
     "publish": "pnpm tsx publish"
   },
   "keywords": [],
@@ -16,7 +16,8 @@
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.913.0",
     "@aws-sdk/client-lambda": "^3.913.0",
-    "@aws-sdk/client-s3": "^3.917.0"
+    "@aws-sdk/client-s3": "^3.917.0",
+    "@aws-sdk/client-sts": "^3.917.0"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

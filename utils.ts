@@ -6,7 +6,6 @@ import { type Architecture, type PackageType, type MemorySize, type ExecutionDat
 const ACCOUNT_ID = "024853653660";
 const REGION = "eu-central-1";
 const lambdaClient = new LambdaClient({ region: "eu-central-1" });
-const cloudWatchLogsClient = new CloudWatchLogsClient({ region: "eu-central-1" });
 
 export async function createOrUpdateFunctionCode(runtime: string, architecture: Architecture, memorySize: MemorySize, packageType: PackageType): Promise<void> {
     const functionName = getFunctionName(runtime, packageType, architecture, memorySize);
@@ -214,37 +213,6 @@ export async function deleteFunction(functionName: string): Promise<void> {
     await lambdaClient.send(deleteCommand);
 }
 
-export async function queryCloudWatchLogs(functionName: string, hoursBack: number): Promise<ExecutionData[]> {
-    const startCommand = new StartQueryCommand({
-        logGroupName: `/aws/lambda/${functionName}`,
-        startTime: Math.floor((Date.now() - hoursBack * 60 * 60 * 1000) / 1000),
-        endTime: Math.floor(Date.now() / 1000),
-        queryString: "fields @timestamp, @duration, @initDuration, @billedDuration, @maxMemoryUsed | filter @message like /^REPORT/ | sort @timestamp desc"
-    });
-
-    const { queryId } = await cloudWatchLogsClient.send(startCommand);
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const resultsCommand = new GetQueryResultsCommand({ queryId });
-    const results = await cloudWatchLogsClient.send(resultsCommand);
-
-    const tableData = (results.results || []).map((row, index) => {
-        const duration = row.find(field => field.field === '@duration')?.value;
-        const initDuration = row.find(field => field.field === '@initDuration')?.value || '0';
-        const billedDuration = row.find(field => field.field === '@billedDuration')?.value;
-        const maxMemoryUsed = row.find(field => field.field === '@maxMemoryUsed')?.value;
-
-        return {
-            initDuration: parseFloat(initDuration || '0'),
-            duration: parseFloat(duration || '0'),
-            billedDuration: parseFloat(billedDuration || '0'),
-            memoryUsed: parseInt(maxMemoryUsed || '0') / 1_000_000,
-        };
-    });
-    
-    return tableData;
-}
 
 export function getPackPath(runtime: string, architecture: Architecture): string {
     return `runtimes/${runtime}/function_${architecture}.zip`;

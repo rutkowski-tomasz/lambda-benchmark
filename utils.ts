@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { LambdaClient, UpdateFunctionCodeCommand, CreateFunctionCommand, DeleteFunctionCommand, InvokeCommand, GetFunctionCommand, UpdateFunctionConfigurationCommand } from "@aws-sdk/client-lambda";
 import { CloudWatchLogsClient, StartQueryCommand, GetQueryResultsCommand } from "@aws-sdk/client-cloudwatch-logs";
-import { type Architecture, type PackageType, type MemorySize, type ExecutionData } from './types.js';
+import { type Architecture, type PackageType, type MemorySize, type ExecutionData, type Input, type Output } from './types.js';
 
 const ACCOUNT_ID = "024853653660";
 const REGION = "eu-central-1";
@@ -42,8 +42,7 @@ export async function createOrUpdateFunctionCode(runtime: string, architecture: 
         const createCommand = new CreateFunctionCommand(createCommandInput);
 
         await lambdaClient.send(createCommand);
-        // console.log(`Created function: ${functionName} with architecture: ${architecture}`);
-        
+
         await waitForFunctionActive(functionName);
         
     } catch (error: any) {
@@ -61,8 +60,7 @@ export async function createOrUpdateFunctionCode(runtime: string, architecture: 
             }
             
             await lambdaClient.send(updateCodeCommand);
-            // console.log(`Function ${functionName} already exists, updating code...`);
-            
+
             await waitForFunctionActive(functionName);
         } else {
             throw error;
@@ -119,22 +117,93 @@ export async function updateFunctionConfiguration(runtime: string, packageType: 
     });
 
     await lambdaClient.send(updateCommand);
-    // console.log(`Updated function configuration: ${functionName} to memory size: ${memorySize}`);
-    
+
     await waitForFunctionActive(functionName);
 }
 
-export async function invokeFunction(functionName: string): Promise<any> {
+export function generateInputAndExpectedOutput(arraySize: number): { input: Input, expectedOutput: Output } {
+    const numbers: number[] = [];
+    for (let i = 0; i < arraySize; i++) {
+        numbers.push(Math.floor(Math.random() * 1_000) + 1);
+    }
+
+    const min = Math.min(...numbers);
+    const normalized = numbers.map(x => x - min);
+    return { input: { numbers }, expectedOutput: { inputNumbers: numbers, normalizedNumbers: normalized, min } };
+}
+
+export function verifyNormalizedResponse(output: Output, expectedOutput: Output): boolean {
+    // console.log('expectedOutput', expectedOutput);
+    // console.log('output', output);
+
+    return output.min === expectedOutput.min
+        && expectedOutput.inputNumbers.length === output.inputNumbers.length
+        && expectedOutput.normalizedNumbers.length === output.normalizedNumbers.length
+        && output.inputNumbers.every((x, i) => x === expectedOutput.inputNumbers[i])
+        && output.normalizedNumbers.every((x, i) => x === expectedOutput.normalizedNumbers[i])
+}
+
+export async function invokeFunction(functionName: string, payload: string): Promise<any> {
+    const apiGatewayRequest = {
+        body: payload,
+        httpMethod: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        multiValueHeaders: null,
+        isBase64Encoded: false,
+        path: '/invoke',
+        pathParameters: null,
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {
+            accountId: '123456789012',
+            apiId: 'api-id',
+            protocol: 'HTTP/1.1',
+            httpMethod: 'POST',
+            path: '/invoke',
+            stage: 'prod',
+            requestId: 'request-id',
+            requestTime: new Date().toISOString(),
+            requestTimeEpoch: Date.now(),
+            identity: {
+                cognitoIdentityPoolId: null,
+                accountId: null,
+                cognitoIdentityId: null,
+                caller: null,
+                sourceIp: '127.0.0.1',
+                principalOrgId: null,
+                accessKey: null,
+                cognitoAuthenticationType: null,
+                cognitoAuthenticationProvider: null,
+                userArn: null,
+                userAgent: 'Custom User Agent',
+                user: null,
+                apiKey: null,
+                apiKeyId: null,
+                clientCert: null
+            },
+            authorizer: null,
+            domainName: 'api.example.com',
+            domainPrefix: 'api',
+            resourceId: 'resource-id',
+            resourcePath: '/invoke'
+        },
+        resource: '/invoke'
+    };
+
+
     const invokeCommand = new InvokeCommand({
         FunctionName: functionName,
-        InvocationType: "RequestResponse"
+        InvocationType: "RequestResponse",
+        Payload: new TextEncoder().encode(JSON.stringify(apiGatewayRequest)),
     });
-    
+
     const response = await lambdaClient.send(invokeCommand);
-    
+
     const responsePayload = JSON.parse(new TextDecoder().decode(response.Payload));
-    // console.log(`Invoked function ${functionName}:`, responsePayload);
-    return responsePayload;
+    return JSON.parse(responsePayload.body);
 }
 
 export async function deleteFunction(functionName: string): Promise<void> {
@@ -143,7 +212,6 @@ export async function deleteFunction(functionName: string): Promise<void> {
     });
 
     await lambdaClient.send(deleteCommand);
-    // console.log(`Deleted function: ${functionName}`);
 }
 
 export async function queryCloudWatchLogs(functionName: string, hoursBack: number): Promise<ExecutionData[]> {

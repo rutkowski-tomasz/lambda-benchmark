@@ -4,6 +4,8 @@ Work in progress
 
 # 📊 lambda-benchmark
 
+Weekly benchmarks to drive your AWS Lambda decisions
+
 Motivation:
 Up to date benchmark results
 Analyzing cold start and execution times
@@ -28,9 +30,18 @@ Query CloudWatch REPORT logs for each function to extract cold start and executi
  
 # 🛣️ Roadmap
 
-1. Implement benchmarked logic deserialize, get min/max/avg of positive numbers, serialize to JSON
-    1. dotnet8
-    1. llrt
-    1. nodejs22
 1. Implement dotnet8 aot on AL2
-1. Implement dotnet9 aot on AL2023
+1. Track changes not to zip all the time
+1. Track changes not to create images all the time
+1. Ziping as GitHub action
+1. Creating images as GitHub action
+1. Weekly execution in GitHub action
+1. Weekly analysis in GitHub action
+1. Runtimes
+- Rust
+- Go
+- Nodejs (16, 18, 20)
+- Python (3.9, 3.10, 3.11, 3.12, 3.13)
+- Shell
+- Java
+- C++

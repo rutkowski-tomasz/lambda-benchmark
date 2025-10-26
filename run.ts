@@ -1,12 +1,13 @@
 import fs from 'fs';
 import { analyze, createCustomImage, execute, loginToEcr, pack } from "./operations.js";
 import { type Architecture, type Execute, type MemorySize, type Build, type PackageType, type Benchmark } from "./types.js";
+import { getFunctionName } from "./utils.js";
 
 const ACCOUNT_ID = "024853653660";
 const REGION = "eu-central-1";
 const runType = process.argv[2];
 if (runType != 'execute' && runType != 'analyze') {
-    console.error(`[error] Invalid run type: ${runType}, use pnpm tsx run <execute|analyze>`);
+    console.error(`[error] Invalid run type: ${runType}, use pnpm <execute|analyze>`);
     process.exit(1);
 }
 
@@ -51,7 +52,9 @@ const executions: Execute[] =
         packageType,
     })))));
 
-const invocationCount = 5;
+const invocationCount = 1;
+const arraySize = 2;
+const hoursBack = 1;
 
 if (!fs.existsSync('data/benchmark.json')) {
     fs.writeFileSync('data/benchmark.json', '{}');
@@ -61,20 +64,30 @@ if (runType == 'execute') {
     console.log(`Creating ${runtimes.length * architectures.length} packages...`);
     const zipSizes = await Promise.all(builds.map(pack));
 
-    const registryUrl = await loginToEcr(REGION, ACCOUNT_ID);
+    let imageSizes: { runtime: string, architecture: Architecture, packageType: PackageType, size: number }[] = [];
+    if (packageTypes.includes('image')) {
+        const registryUrl = await loginToEcr(REGION, ACCOUNT_ID);
 
-    console.log(`Publishing ${runtimes.length * architectures.length} custom images...`);
-    const imageSizes = await Promise.all(builds.map(x => createCustomImage(x, registryUrl)));
+        console.log(`Publishing ${runtimes.length * architectures.length} custom images...`);
+        imageSizes = await Promise.all(builds.map(x => createCustomImage(x, registryUrl)));
+    }
 
     const _benchmark: Benchmark = JSON.parse(fs.readFileSync('data/benchmark.json', 'utf8'));
     _benchmark.packageSizes = [ ..._benchmark.packageSizes || [], ...zipSizes, ...imageSizes ];
     fs.writeFileSync('data/benchmark.json', JSON.stringify(_benchmark));
 
-    await Promise.all(executions.map(x => execute(x, invocationCount)));
+    const results = await Promise.all(executions.map(x => execute(x, invocationCount, arraySize)));
+    const failures = executions.filter((_, index) => !results[index]);
+
+    if (failures.length > 0) {
+        console.error(`\n[error] ${failures.length} function(s) failed:`);
+        failures.forEach(f => console.error(`  - ${getFunctionName(f.runtime, f.packageType, f.architecture, f.memorySize)}`));
+        process.exit(1);
+    }
 }
 
 if (runType == 'analyze') {
-    const analysis = await Promise.all(executions.map(x => analyze(x, 1)));
+    const analysis = await Promise.all(executions.map(x => analyze(x, hoursBack)));
 
     const benchmark: Benchmark = JSON.parse(fs.readFileSync('data/benchmark.json', 'utf8'));
     benchmark.analysis = analysis;

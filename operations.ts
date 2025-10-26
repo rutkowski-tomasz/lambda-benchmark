@@ -9,7 +9,9 @@ import {
     updateFunctionConfiguration,
     invokeFunction,
     deleteFunction,
-    queryCloudWatchLogs
+    queryCloudWatchLogs,
+    generateInputAndExpectedOutput,
+    verifyNormalizedResponse
 } from './utils.js';
 import { type Analysis, type Architecture, type Build, type Execute, type PackageType } from './types.js';
 
@@ -82,23 +84,30 @@ export async function loginToEcr(region: string, accountId: string) {
     return `${accountId}.dkr.ecr.${region}.amazonaws.com`;
 }
 
-export async function execute(execute: Execute, invokeCount: number) {
+export async function execute(execute: Execute, invokeCount: number, arraySize: number): Promise<boolean> {
     const functionName = getFunctionName(execute.runtime, execute.packageType, execute.architecture, execute.memorySize);
     await createOrUpdateFunctionCode(execute.runtime, execute.architecture, execute.memorySize, execute.packageType);
+
+    let success = true;
 
     for (let i = 0; i < invokeCount; i++) {
         await updateFunctionConfiguration(execute.runtime, execute.packageType, execute.architecture, execute.memorySize);
 
         console.log(`(${i + 1}/${invokeCount}) Invoking function ${functionName}`);
 
-        const response = await invokeFunction(functionName);
-        if (response.message !== "Hello from Lambda!") {
+        const { input, expectedOutput } = generateInputAndExpectedOutput(arraySize);
+        const response = await invokeFunction(functionName, JSON.stringify(input));
+
+        if (!verifyNormalizedResponse(response, expectedOutput)) {
             console.error(`[error] Invalid response for function ${functionName}`);
+            success = false;
             continue;
         }
     }
 
     await deleteFunction(functionName);
+
+    return success;
 }
 
 export async function analyze(execute: Execute, hoursBack: number): Promise<Analysis> {
